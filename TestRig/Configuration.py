@@ -32,3 +32,5 @@ class RobotConfig:
             -self.abduction_offset,
             self.abduction_offset
         ])
+        self.leg_up = # Insert length of upper leg
+        self.leg_low = # Insert length of lower leg

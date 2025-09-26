@@ -50,12 +50,18 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     #Angle between upper leg L_up and D_xz1_HF with cosine relation
     arccos_argument = (L_up**2 + D_xz1_HF**2 - L_low**2) / (2*L_up*D_xz1_HF)
     arccos_argument = np.clip(arccos_argument, -0.99, 0.99) # Determine clips later!!!
-    phi = np.arccos(arccos_argument)
+    psi = np.arccos(arccos_argument)
 
     # The hip angle from negative z1 to upper leg is the difference between phi and gamma
-    theta_hip = phi - gamma
+    theta_hip = psi - gamma
 
     # Determine knee angle:
+    # Angle from upper leg to lower leg
+    arccos_argument = (L_up ** 2 + L_low ** 2 - D_xz1_HF ** 2) / (2 * L_up * L_low)
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)  # Determine clips later!!!
+    phi = np.arccos(arccos_argument)
 
+    # The knee angle from negative z1 to lower leg is:
+    theta_knee = theta_hip + phi - np.pi
 
     return np.array([theta_abductor, theta_hip, theta_knee])
