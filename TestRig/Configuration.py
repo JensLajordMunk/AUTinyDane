@@ -5,12 +5,12 @@ class PWMParams:
     def __init__(self):
         self.pins = # Insert np array of pins used for each pin
         self.range = # Insert PWM range for servos
-        self.freq = # Insert PWM frequency for servos
+        self.freq = 330 # Insert PWM frequency for servos
 
 
 class ServoParams:
     def __init__(self):
-        self.neutral_position_pwm = # Find relevant neutral position PWM on motors
+        self.neutral_position_pwm = 1520
         self.micros_per_rad = MICROS_PER_RAD  # Remember to change in ServoCalibration.py
 
         # The neutral angle of the joint relative to the modeled zero-angle in degrees, for each joint
@@ -34,3 +34,6 @@ class RobotConfig:
         ])
         self.leg_up = # Insert length of upper leg
         self.leg_low = # Insert length of lower leg
+
+        self.dt = 0.1 # Tick time
+        self.degree_pr_second = 5

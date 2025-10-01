@@ -1,7 +1,6 @@
 import pigpio
 from Configuration import PWMParams, ServoParams
 
-
 class HardwareInterface:
     def __init__(self):
         self.pi = pigpio.pi()
@@ -22,8 +21,9 @@ class HardwareInterface:
                 servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angles[motor_index,leg_index])
 
 
-    def set_actuator_position(self, joint_angle, motor_index, leg_index):
-        servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angle)
+    def set_actuator_position(self, joint_angles, leg_index):
+        for m_idx in range(3):
+            servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, m_idx, joint_angles[m_idx])
 
 
 def define_pin_parameters(pi, pwm_params):
