@@ -22,6 +22,7 @@ class ServoParams:
     def neutral_angles(self):
         return self.neutral_angle_degrees * np.pi / 180.0  # Convert to radians
 
+
 class RobotConfig:
     def __init__(self):
         #-------------- Geometry ----------------
