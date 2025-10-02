@@ -4,8 +4,8 @@ from ServoCalibration import NEUTRAL_ANGLE_DEGREES, MICROS_PER_RAD
 class PWMParams:
     def __init__(self):
         self.pins = # Insert np array of pins used for each pin
-        self.range = # Insert PWM range for servos
-        self.freq = 330 # Insert PWM frequency for servos
+        self.range = 65535
+        self.freq = 330
 
 
 class ServoParams:

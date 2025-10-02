@@ -13,7 +13,6 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
         numpy array (3)
             Array of joints at abductor(relative to y), hip(relative to -z'), knee (relative to -z')
     """
-
     (x,y,z) = r_abductor_foot
     O_abd = configuration.abduction_offsets[leg_index]
     L_up = configuration.leg_up
