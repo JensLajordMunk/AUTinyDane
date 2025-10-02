@@ -20,10 +20,9 @@ class HardwareInterface:
             for motor_index in range(3):
                 servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angles[motor_index,leg_index])
 
-
-    def set_actuator_position(self, joint_angles, leg_index):
-        for m_idx in range(3):
-            servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, m_idx, joint_angles[m_idx])
+    # Used in calibrate_servos.py to calibrate the ServoCalibration.py
+    def set_actuator_position(self, joint_angle, leg_index, motor_index):
+        servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angle)
 
 
 def define_pin_parameters(pi, pwm_params):

@@ -1,5 +1,5 @@
 import numpy as np
-from ServoCalibration import NEUTRAL_ANGLE_DEGREES, MICROS_PER_RAD
+from ServoCalibration import ServoCalibration
 
 class PWMParams:
     def __init__(self):
@@ -10,11 +10,14 @@ class PWMParams:
 
 class ServoParams:
     def __init__(self):
+
+        servo_calibration = ServoCalibration()
+
         self.neutral_position_pwm = 1520
-        self.micros_per_rad = MICROS_PER_RAD  # TODO: Remember to change in ServoCalibration.py
+        self.micros_per_rad = servo_calibration.MICROS_PER_RAD  # TODO: Remember to change in ServoCalibration.py
 
         # The neutral angle of the joint relative to the modeled zero-angle in degrees, for each joint
-        self.neutral_angle_degrees = NEUTRAL_ANGLE_DEGREES # TODO: Remember to change in ServoCalibration.py
+        self.neutral_angle_degrees = servo_calibration.NEUTRAL_ANGLE_DEGREES
 
         self.servo_multipliers = # TODO: Find array of sign changes for servos
 

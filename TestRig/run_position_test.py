@@ -5,10 +5,8 @@ from Configuration import RobotConfig
 from Kinematics import inverse_kinematics
 from State import State
 
-# TODO: Enable ease in/out for motion
 
 def test_main():
-    start_time = time.time() # TODO: Why is time not working properly? Fix
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
     state = State()
@@ -25,15 +23,20 @@ def test_main():
 
     target_angles = inverse_kinematics(np.array([x,y,z]), leg_index, configuration)
 
+    start_time = time.time()
     for i in range(phases+1):
-        time = time.time()-start_time
-        progress = time/duration
-        current_angle = initial_angles + (target_angles-initial_angles)*progress
-        hardware_interface.set_actuator_position(current_angle, leg_index)
-        time.sleep(time_per_phase)
+        elapsed_time = time.time()-start_time
+        progress = np.clip(elapsed_time/duration,0,1)
+        smoothed_progress = 6*progress**5-15*progress**4+10*progress**3
+        current_angles = initial_angles + (target_angles-initial_angles)*smoothed_progress
+        for motor_index in range(3):
+            hardware_interface.set_actuator_position(current_angles[motor_index], leg_index,motor_index)
+            time.sleep(time_per_phase)
 
     hardware_interface.set_actuator_position(target_angles, leg_index)
     state.joint_angles=target_angles
+
+    #Smoother step: https://en.wikipedia.org/wiki/Smoothstep
 
 
 
