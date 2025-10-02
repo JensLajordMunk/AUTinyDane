@@ -8,6 +8,8 @@
 from adafruit_servokit import ServoKit
 import time
 
+# TODO: If possible inherit functions, methods and classes from existing files to lower complexity
+
 kit = ServoKit(channels=16)
 
 def test_servo_basic():

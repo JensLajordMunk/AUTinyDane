@@ -5,8 +5,10 @@ from Configuration import RobotConfig
 from Kinematics import inverse_kinematics
 from State import State
 
+# TODO: Enable ease in/out for motion
+
 def test_main():
-    start_time = time.time()
+    start_time = time.time() # TODO: Why is time not working properly? Fix
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
     state = State()
