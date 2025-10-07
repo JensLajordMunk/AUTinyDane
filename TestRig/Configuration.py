@@ -1,22 +1,25 @@
 import numpy as np
-from ServoCalibration import NEUTRAL_ANGLE_DEGREES, MICROS_PER_RAD
+from ServoCalibration import ServoCalibration
 
 class PWMParams:
     def __init__(self):
-        self.pins = # Insert np array of pins used for each pin
-        self.range = 65535
+        self.pins = # TODO: Find used pins (I2C)
+        self.range = 65535 # TODO: Write correct range
         self.freq = 330
 
 
 class ServoParams:
     def __init__(self):
+
+        servo_calibration = ServoCalibration()
+
         self.neutral_position_pwm = 1520
-        self.micros_per_rad = MICROS_PER_RAD  # Remember to change in ServoCalibration.py
+        self.micros_per_rad = servo_calibration.MICROS_PER_RAD  # TODO: Remember to change in ServoCalibration.py
 
         # The neutral angle of the joint relative to the modeled zero-angle in degrees, for each joint
-        self.neutral_angle_degrees = NEUTRAL_ANGLE_DEGREES # Remember to change in ServoCalibration.py
+        self.neutral_angle_degrees = servo_calibration.NEUTRAL_ANGLE_DEGREES
 
-        self.servo_multipliers = # Find array of sign changes for servos
+        self.servo_multipliers = # TODO: Find array of sign changes for servos
 
     @property # The property decorator makes sure that if neutral_angle_degrees is updated then neutral_angle updates
     def neutral_angles(self):
@@ -26,15 +29,12 @@ class ServoParams:
 class RobotConfig:
     def __init__(self):
         #-------------- Geometry ----------------
-        self.abduction_offset = # Insert abduction offset
+        self.abduction_offset = # TODO: Insert abduction offset
         self.abduction_offsets = np.array([
             -self.abduction_offset,
             self.abduction_offset,
             -self.abduction_offset,
             self.abduction_offset
         ])
-        self.leg_up = # Insert length of upper leg
-        self.leg_low = # Insert length of lower leg
-
-        self.dt = 0.1 # Tick time
-        self.degree_pr_second = 5
+        self.leg_up = # TODO: Insert length of upper leg
+        self.leg_low = # TODO: Insert length of lower leg

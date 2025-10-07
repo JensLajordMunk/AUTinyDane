@@ -1,6 +1,9 @@
 import numpy as np
-
-MICROS_PER_RAD = # Insert values from servo motor
-NEUTRAL_ANGLE_DEGREES = np.array(
-# Insert desired neutral angles. These are the angles we want to be the starting point for the gait.
-)
+class ServoCalibration:
+    def __init__(self):
+        self.MICROS_PER_RAD = None# TODO: Insert values from servo motor: micros_per_rad = dPWM/dAngle
+        self.NEUTRAL_ANGLE_DEGREES = np.array(
+                                [[  0.,  0.,  0.,  0.],
+                                 [ 45., 45., 45., 45.],
+                                 [-45.,-45.,-45.,-45.]]
+                                )
