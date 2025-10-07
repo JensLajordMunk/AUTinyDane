@@ -34,7 +34,7 @@ def test_main():
             time.sleep(time_per_phase)
 
     hardware_interface.set_actuator_position(target_angles, leg_index)
-    state.joint_angles=target_angles
+    state.joint_angles[:,leg_index]=target_angles
 
     #Smoother step: https://en.wikipedia.org/wiki/Smoothstep
 

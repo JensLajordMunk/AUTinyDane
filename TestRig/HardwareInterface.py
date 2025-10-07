@@ -1,67 +1,50 @@
-import pigpio
+import numpy as np
+import board
+import busio
+from adafruit_pca9685 import PCA9685
 from Configuration import PWMParams, ServoParams
 
 class HardwareInterface:
     def __init__(self):
-        self.pi = pigpio.pi()
-
-        if not self.pi.connected:
-            raise RuntimeError("pigpio could not connect to RPi pins")
-
         self.pwm_params = PWMParams()
         self.servo_params = ServoParams()
 
-        # Define pin parameters for each pin
-        define_pin_parameters(self.pi, self.pwm_params)
+        self.i2c = busio.I2C(board.SCL, board.SDA)
+        self.pca = PCA9685(self.i2c, address=0x40)
+        self.pca.frequency = self.pwm_params.freq
 
+        self.channels = [
+            [0, 1, 2],  # leg 0, front left
+            [3, 4, 5],  # leg 1, front right
+            [6, 7, 8],  # leg 2, rear left
+            [9, 10, 11],  # leg 3, rear right
+        ] #TODO: Determine actual wiring
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
             for motor_index in range(3):
-                servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angles[motor_index,leg_index])
+                joint_angle = joint_angles[motor_index,leg_index]
+                self.servo_command(leg_index, motor_index, joint_angle)
 
     # Used in calibrate_servos.py to calibrate the ServoCalibration.py
     def set_actuator_position(self, joint_angle, leg_index, motor_index):
-        servo_command(self.pi, self.pwm_params, self.servo_params, leg_index, motor_index, joint_angle)
+        self.servo_command(leg_index, motor_index, joint_angle)
 
+    def servo_command(self, leg_index, motor_index, joint_angle):
 
-def define_pin_parameters(pi, pwm_params):
+        """
+        Sends a servo command to the given channel on the pca by converting the
+        joint angle to a duty cycle and sending it to the channel
 
-    """
-    Takes in a pigpio.pi object and a PWMParams object and defines the PWM frequency and range for each pin.
+        :param leg_index:
+        :param motor_index:
+        :param joint_angle:
+        """
+        ch = self.channels[leg_index][motor_index]
+        duty_cycle = angle_to_duty(joint_angle, self.pwm_params, self.servo_params, motor_index, leg_index)
 
-    :param pi: pigpio object which talks to the pins on the RPi
-    :param pwm_params: PWM parameters which is send to the pins given and the corresponding frequency and range
-    """
-
-    for leg_index in range(4):
-        for motor_index in range(3):
-            # Sets the PWM frequency for each pin corresponding to the leg and motor index
-            # and the pwm frequency in Configuration
-            pi.set_PWM_frequency(int(pwm_params.pins[motor_index, leg_index]), pwm_params.freq)
-            # Sets PWM range from configuration for the motor and pin
-            pi.set_PWM_range(int(pwm_params.pins[motor_index, leg_index]), pwm_params.range)
-
-
-def servo_command(pi, pwm_params, servo_params, leg_index, motor_index, joint_angle):
-
-    """
-    Sends a servo command to the given pin on the RPi by converting the
-    joint angle to a duty cycle and sending it to the pin
-
-    :param pi: pigpio object
-    :param pwm_params:
-    :param servo_params:
-    :param leg_index:
-    :param motor_index:
-    :param joint_angle:
-    """
-
-    duty_cycle = angle_to_duty(joint_angle, pwm_params, servo_params, motor_index, leg_index)
-
-    # Sets the duty cycle on the given pin
-    pi.set_PWM_dutycycle(int(pwm_params.pins[motor_index, leg_index]), duty_cycle)
-
+        # Sets the duty cycle on the given channel
+        self.pca.channels[ch].duty_cycle = duty_cycle
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 

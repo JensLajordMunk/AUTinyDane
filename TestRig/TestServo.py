@@ -7,8 +7,12 @@
 # High-level:
 from adafruit_servokit import ServoKit
 import time
+import numpy as np
+from HardwareInterface import HardwareInterface
+from Configuration import RobotConfig
+from Kinematics import inverse_kinematics
+from State import State
 
-# TODO: If possible inherit functions, methods and classes from existing files to lower complexity
 
 kit = ServoKit(channels=16)
 
@@ -35,92 +39,30 @@ def test_servo_sweep():
     #test_servo_basic()
 
 
-# Low-level:
-# Purpose: Drive servos via PCA9685 using your own angle→pulse mapping.
-# Library: adafruit-circuitpython-pca9685 (uses 16-bit duty_cycle on channels)
-import time
-import numpy as np
-import board
-import busio
-from adafruit_pca9685 import PCA9685
-from HardwareInterface import pwm_params
+def test_leg_servo
+    hardware_interface = HardwareInterface()
+    state = State()
 
-# ---------------------------
-# Global PCA9685 settings
-# ---------------------------
-I2C_ADDR = 0x40
-PWM_FREQ_HZ = 330      #Servo frequency
+    leg_index = int(input("Enter leg index: "))
+    motor_index = int(input("Enter motor index: "))
+    desired_angle_degrees = int(input("Enter desired angle in degrees: "))
 
-# ---------------------------
-# Per-channel servo calibration
-# Each entry is a dict for a PCA9685 CHANNEL index (0..15):
-#   - neutral_angle_rad: mechanical "zero" for this joint (radians)
-#   - neutral_pulse_us:  pulse width (µs) that holds that neutral angle
-#   - micros_per_rad:    slope: µs per radian around neutral
-#   - min_us/max_us:     hard limits to protect the servo/mechanism
-# ---------------------------
-DEFAULT_CAL = {
-    "neutral_angle_rad": 0.0,
-    "neutral_pulse_us": 1520.0,
-    # If servo is ~500..2500 µs for ~±90° (i.e., 180° total), Test this
-    # slope ≈ (2500-500) / π  ≈ 636.62 µs/rad
-    "micros_per_rad": (2020.0 - 1000.0) / np.pi,
-    "min_us": 1000.0,
-    "max_us": 2020.0,
-}
+    desired_angle = desired_angle_degrees / 180.0 * np.pi
 
-CHANNEL_CALS = {
-    ch: DEFAULT_CAL.copy() for ch in range(16)
-}
-# Example of per-joint tweaks (uncomment and tune as you calibrate):
-# CHANNEL_CALS[0]["neutral_angle_rad"] = math.radians(+2.0)
-# CHANNEL_CALS[0]["neutral_pulse_us"]  = 1490.0
-# CHANNEL_CALS[0]["micros_per_rad"]    = 640.0
-# CHANNEL_CALS[0]["min_us"]            = 520.0
-# CHANNEL_CALS[0]["max_us"]            = 2400.0
+    hardware_interface.set_actuator_position(desired_angle, leg_index, motor_index)
+    state.joint_angles[motor_index,leg_index] = desired_angle
 
+def test_leg_movement
+    hardware_interface = HardwareInterface()
+    configuration = RobotConfig()
+    state = State()
 
-# ---------------------------
-# Mapping functions
-# ---------------------------
-def angle_rad_to_pulse_us(angle_rad: float, cal: dict) -> float:
-    """
-    Convert a joint angle (radians) to a pulse width in microseconds
-    using per-channel calibration parameters.
-    """
-    angle_dev = angle_rad - cal["neutral_angle_rad"]
-    pulse_us = cal["neutral_pulse_us"] + cal["micros_per_rad"] * angle_dev
-    # Clamp to safe limits
-    pulse_us = np.clip(pulse_us, cal["min_us"], cal["max_us"])
-    return pulse_us
+    leg_index = int(input("Enter leg index: "))
+    x, y, z = map(float, input("Enter position (unit [m]): x y z").split())
 
+    target_angles = inverse_kinematics(np.array([x,y,z]), leg_index, configuration)
 
-def pulse_us_to_duty16(pulse_us: float, pwm_params: float) -> int:
-    """
-    Convert a pulse width (µs) to a 16-bit duty cycle (0..65535)
-    for the CircuitPython PCA9685 'duty_cycle' API.
-    """
-    duty = int(pulse_us / 1e6 * pwm_params.freq * pwm_params.range)
-    # Bound to 16-bit range
-    duty = np.clip(pulse_us, 0, pwm_params.range)
-    return duty
+    for motor_index in range(3):
+        hardware_interface.set_actuator_position(target_angles[motor_index], leg_index,motor_index)
 
-
-def set_servo_angle_deg(pca: PCA9685, channel: int, angle: float):
-    """
-    Convenience: take angle in degrees, map to µs, then to duty16, and write.
-    """
-    cal = CHANNEL_CALS[channel]
-    pulse_us = angle_rad_to_pulse_us(angle, cal)
-    duty = pulse_us_to_duty16(pulse_us, pca.frequency)
-    pca.channels[channel].duty_cycle = duty
-
-
-# ---------------------------
-# Simple motion helpers
-# ---------------------------
-def move_to(pca: PCA9685, channel: int, angle_deg: float, hold_s: float = 0.0):
-    """Move a servo to an absolute angle (deg) and optionally hold for some seconds."""
-    set_servo_angle_deg(pca, channel, angle_deg)
-    if hold_s > 0:
-        time.sleep(hold_s)
+    state.joint_angles[:,leg_index]=target_angles
