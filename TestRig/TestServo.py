@@ -34,12 +34,7 @@ def test_servo_sweep():
         kit.servo[0].angle = angle
         time.sleep(0.05)
 
-#if __name__ == "__main__":
-    # Run only ONE test by calling the function
-    #test_servo_basic()
-
-
-def test_leg_servo
+def test_leg_servo():
     hardware_interface = HardwareInterface()
     state = State()
 
@@ -52,7 +47,7 @@ def test_leg_servo
     hardware_interface.set_actuator_position(desired_angle, leg_index, motor_index)
     state.joint_angles[motor_index,leg_index] = desired_angle
 
-def test_leg_movement
+def test_leg_movement():
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
     state = State()
@@ -66,3 +61,39 @@ def test_leg_movement
         hardware_interface.set_actuator_position(target_angles[motor_index], leg_index,motor_index)
 
     state.joint_angles[:,leg_index]=target_angles
+
+
+def test_leg_params():
+    hardware_interface = HardwareInterface()
+    calibration = ServoCalibration()
+    config = ServoParams()
+
+    leg_index = 0
+    motor_index = 0
+
+    while True:
+
+        min_angle = input(
+            "Search for the lower bound angle, insert new lower angle until amp increses. If lower angle found type 'y': ")
+        if min_angle == "y":
+            break
+        min_angle = float(min_angle) / 180.0 * np.pi
+        hardware_interface.set_actuator_position(min_angle, leg_index, motor_index)
+        min_angle_prev = float(min_angle)
+
+    while True:
+
+        max_angle = input(
+            "Search for the upper bound angle, insert new upper angle until amp increses. If upper angle found type 'y': ")
+        if max_angle == "y":
+            break
+        max_angle = float(max_angle) / 180.0 * np.pi
+        hardware_interface.set_actuator_position(max_angle, leg_index, motor_index)
+        max_angle_prev = float(max_angle)
+
+    micros_per_deg = calibration.MICROS_PER_RAD * np.pi / 180
+    new_neutral_PWM = config.neutral_position_pwm + ((max_angle_prev + min_angle_prev) * micros_per_deg / 2)
+    new_micros_per_rad = 180 * (config.neutral_position_pwm + max_angle_prev * micros_per_deg - new_neutral_PWM) / (
+                90 * np.pi)
+    print(f"The new neutral PWM is: {new_neutral_PWM}")
+    print(f"The new micros per rad is: {new_micros_per_rad}")

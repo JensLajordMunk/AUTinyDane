@@ -12,7 +12,7 @@ class ServoParams:
 
         servo_calibration = ServoCalibration()
 
-        self.neutral_position_pwm = 1520
+        self.neutral_position_pwm = servo_calibration.neutral_position_pwm # TODO: Remember to change in ServoCalibration.py
         self.micros_per_rad = servo_calibration.MICROS_PER_RAD  # TODO: Remember to change in ServoCalibration.py
 
         # The neutral angle of the joint relative to the modeled zero-angle in degrees, for each joint

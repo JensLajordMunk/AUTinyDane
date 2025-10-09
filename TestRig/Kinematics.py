@@ -40,7 +40,7 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     # The rest of the calculations are done in a tilted xz1-plane with normal vector along O_abd
     # The length D_yz_HF in the xz1-plane is the distance along the tilted z1 axis between Hip and Foot.
     # Angle between the tilted negative z1 axis and direction of D_xz1_HF from Hip to Foot in xz1-plane
-    gamma = np.arctan2(x/D_yz_HF)
+    gamma = np.arctan2(x,D_yz_HF)
 
     # Distance D_xz1_HF from Hip to Foot in xz1-plane
     D_xz1_HF = (D_yz_HF**2+x**2)**0.5 # TODO: Change variable name to respect lowercase variable convention if possible

@@ -66,8 +66,8 @@ def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 
     # Calculates the pulse width in µs
     pulse_width_micros = (
-        servo_params.neutral_position_pwm
-        + servo_params.micros_per_rad * angle_deviation
+        servo_params.neutral_position_pwm[motor_index,leg_index]
+        + servo_params.micros_per_rad[motor_index,leg_index] * angle_deviation
     )
 
     # Calculates duty cycle from pulse width, frequency and range
