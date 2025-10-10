@@ -31,12 +31,12 @@ class ServoParams:
 class RobotConfig:
     def __init__(self):
         #-------------- Geometry ----------------
-        self.abduction_offset = # TODO: Insert abduction offset
+        self.abduction_offset =0.04 # TODO: Insert abduction offset
         self.abduction_offsets = np.array([
             -self.abduction_offset,
             self.abduction_offset,
             -self.abduction_offset,
             self.abduction_offset
         ])
-        self.leg_up = # TODO: Insert length of upper leg
-        self.leg_low = # TODO: Insert length of lower leg
+        self.leg_up =0.08# TODO: Insert length of upper leg
+        self.leg_low =0.08# TODO: Insert length of lower leg

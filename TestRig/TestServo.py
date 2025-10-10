@@ -9,7 +9,8 @@ from adafruit_servokit import ServoKit
 import time
 import numpy as np
 from HardwareInterface import HardwareInterface
-from Configuration import RobotConfig
+from Configuration import RobotConfig, ServoParams
+from ServoCalibration import ServoCalibration
 from Kinematics import inverse_kinematics
 from State import State
 
@@ -68,8 +69,8 @@ def test_leg_params():
     calibration = ServoCalibration()
     config = ServoParams()
 
-    leg_index = 0
-    motor_index = 0
+    leg_index = int(input("Which leg index?"))
+    motor_index = int(input("Which motor index?"))
 
     while True:
 
@@ -91,9 +92,8 @@ def test_leg_params():
         hardware_interface.set_actuator_position(max_angle, leg_index, motor_index)
         max_angle_prev = float(max_angle)
 
-    micros_per_deg = calibration.MICROS_PER_RAD * np.pi / 180
-    new_neutral_PWM = config.neutral_position_pwm + ((max_angle_prev + min_angle_prev) * micros_per_deg / 2)
-    new_micros_per_rad = 180 * (config.neutral_position_pwm + max_angle_prev * micros_per_deg - new_neutral_PWM) / (
-                90 * np.pi)
+    micros_per_rad = calibration.MICROS_PER_RAD[motor_index,leg_index]
+    new_neutral_PWM = config.neutral_position_pwm[motor_index,leg_index] + ((max_angle_prev + min_angle_prev) * micros_per_rad / 2)
+    new_micros_per_rad = (config.neutral_position_pwm[motor_index,leg_index] + max_angle_prev * micros_per_rad - new_neutral_PWM) / 90
     print(f"The new neutral PWM is: {new_neutral_PWM}")
     print(f"The new micros per rad is: {new_micros_per_rad}")
