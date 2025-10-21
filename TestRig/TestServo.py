@@ -37,7 +37,6 @@ def test_servo_sweep():
 
 def test_leg_servo():
     hardware_interface = HardwareInterface()
-    state = State()
 
     leg_index = int(input("Enter leg index: "))
     motor_index = int(input("Enter motor index: "))
@@ -46,12 +45,10 @@ def test_leg_servo():
     desired_angle = desired_angle_degrees / 180.0 * np.pi
 
     hardware_interface.set_actuator_position(desired_angle, leg_index, motor_index)
-    state.joint_angles[motor_index,leg_index] = desired_angle
 
 def test_leg_movement():
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
-    state = State()
 
     leg_index = int(input("Enter leg index: "))
     x, y, z = map(float, input("Enter position (unit [m]): x y z").split())
@@ -60,8 +57,6 @@ def test_leg_movement():
 
     for motor_index in range(3):
         hardware_interface.set_actuator_position(target_angles[motor_index], leg_index,motor_index)
-
-    state.joint_angles[:,leg_index]=target_angles
 
 
 def test_leg_params():

@@ -14,49 +14,49 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
             Array of joints at abductor(relative to y), hip(relative to -z'), knee (relative to -z')
     """
     (x,y,z) = r_abductor_foot
-    O_abd = configuration.abduction_offsets[leg_index]
-    L_up = configuration.leg_up
-    L_low = configuration.leg_low
+    o_abd = configuration.abduction_offsets[leg_index]
+    l_up = configuration.leg_up
+    l_low = configuration.leg_low
 
     # Determine abductor angle:
-    # Angle between direction of D_yz_AF from Abductor to Foot in yz-plane and positive y-axis:
+    # Angle between direction of d_yz_af from Abductor to Foot in yz-plane and positive y-axis:
     alpha = np.arctan2(z,y)
 
     # Length of D_yz_AF
-    D_yz_AF = (y**2+z**2)**0.5 # TODO: Change variable name to respect lowercase variable convention if possible
+    d_yz_af = (y**2+z**2)**0.5
 
-    # Angle between abductor offset O_abd and D_yz_AF
-    arccos_argument = O_abd/D_yz_AF
-    arccos_argument = np.clip(arccos_argument, -0.99, 0.99) #TODO: Determine clip values
+    # Angle between abductor offset o_abd and d_yz_af
+    arccos_argument = o_abd/d_yz_af
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     beta = np.arccos(arccos_argument)
 
-    # The abductor angle from y-axis to O_abd is the sum of alpha and beta
+    # The abductor angle from y-axis to o_abd is the sum of alpha and beta
     theta_abductor = alpha+beta
 
     # Determine hip angle:
-    # Distance D_yz_HF from Hip to Foot in yz-plane
-    D_yz_HF = (D_yz_AF**2-O_abd**2)**0.5 # TODO: Change variable name to respect lowercase variable convention if possible
+    # Distance d_yz_hf from Hip to Foot in yz-plane
+    d_yz_hf = (d_yz_af**2-o_abd**2)**0.5
 
-    # The rest of the calculations are done in a tilted xz1-plane with normal vector along O_abd
-    # The length D_yz_HF in the xz1-plane is the distance along the tilted z1 axis between Hip and Foot.
-    # Angle between the tilted negative z1 axis and direction of D_xz1_HF from Hip to Foot in xz1-plane
-    gamma = np.arctan2(x,D_yz_HF)
+    # The rest of the calculations are done in a tilted xz1-plane with normal vector along o_abd
+    # The length d_yz_hf in the xz1-plane is the distance along the tilted z1 axis between Hip and Foot.
+    # Angle between the tilted negative z1 axis and direction of d_xz1_hf from Hip to Foot in xz1-plane
+    gamma = np.arctan2(x,d_yz_hf)
 
-    # Distance D_xz1_HF from Hip to Foot in xz1-plane
-    D_xz1_HF = (D_yz_HF**2+x**2)**0.5 # TODO: Change variable name to respect lowercase variable convention if possible
+    # Distance d_xz1_hf from Hip to Foot in xz1-plane
+    d_xz1_hf = (d_yz_hf**2+x**2)**0.5
 
-    #Angle between upper leg L_up and D_xz1_HF with cosine relation
-    arccos_argument = (L_up**2 + D_xz1_HF**2 - L_low**2) / (2*L_up*D_xz1_HF)
-    arccos_argument = np.clip(arccos_argument, -0.99, 0.99) #TODO: Determine clip values
+    #Angle between upper leg l_up and d_xz1_hf with cosine relation
+    arccos_argument = (l_up**2 + d_xz1_hf**2 - l_low**2) / (2*l_up*d_xz1_hf)
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     psi = np.arccos(arccos_argument)
 
-    # The hip angle from negative z1 to upper leg is the difference between phi and gamma
-    theta_hip = psi - gamma
+    # The hip angle from negative z1 to upper leg is the difference between psi and gamma
+    theta_hip = psi - gamma # Positive angle from -z' toward -x
 
     # Determine knee angle:
     # Angle from upper leg to lower leg
-    arccos_argument = (L_up ** 2 + L_low ** 2 - D_xz1_HF ** 2) / (2 * L_up * L_low)
-    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)  #TODO: Determine clip values
+    arccos_argument = (l_up ** 2 + l_low ** 2 - d_xz1_hf ** 2) / (2 * l_up * l_low)
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     phi = np.arccos(arccos_argument)
 
     # The knee angle from negative z1 to lower leg is:

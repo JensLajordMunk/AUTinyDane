@@ -19,7 +19,7 @@ class ServoParams:
         self.neutral_angle_degrees = servo_calibration.NEUTRAL_ANGLE_DEGREES
 
         self.servo_multipliers = np.array(
-                                [[ 1, 1, 1, 1],
+                                [[ 1, -1, 1, -1],
                                  [ 1, 1, 1, 1],
                                  [ 1, 1, 1, 1]]
                                 )# TODO: Find array of sign changes for servos
@@ -33,10 +33,10 @@ class RobotConfig:
         #-------------- Geometry ----------------
         self.abduction_offset =0.04 # TODO: Insert abduction offset
         self.abduction_offsets = np.array([
-            -self.abduction_offset,
             self.abduction_offset,
             -self.abduction_offset,
-            self.abduction_offset
+            self.abduction_offset,
+            -self.abduction_offset
         ])
         self.leg_up =0.08# TODO: Insert length of upper leg
         self.leg_low =0.08# TODO: Insert length of lower leg

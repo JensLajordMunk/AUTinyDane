@@ -49,9 +49,9 @@ class HardwareInterface:
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 
     """
-    Converts the given angle to a duty cycle for the given pin
+    Converts the given angle to a duty cycle for the given leg and motor
 
-    :param angle:
+    :param angle: Desired angle from axis (in radians)
     :param pwm_params:
     :param servo_params:
     :param motor_index:
