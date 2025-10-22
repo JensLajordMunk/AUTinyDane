@@ -12,7 +12,7 @@ configuration = RobotConfig()
 r_abductor_foot = (0.04, 0.04, -0.08)
 
 # Choose which leg to test (typically 0–3)
-leg_index = 0
+leg_index = 1
 
 # Call the inverse kinematics function
 thetas = inverse_kinematics(r_abductor_foot, leg_index, configuration)
