@@ -40,3 +40,20 @@ class RobotConfig:
         ])
         self.leg_up =0.08# TODO: Insert length of upper leg
         self.leg_low =0.08# TODO: Insert length of lower leg
+
+        #-------------- Gait parameters ----------------
+        self.arcR = 0.012
+        self.velocity = 0.1
+        self.stancetime = 1
+        self.swingtime = self.stancetime/3 # semi trot gait pattern
+        self.step_height = 0.06
+        self.frequency = 125
+        self.Z_zero = 0.1131 # The height of the leg
+        self.leg_pairs = np.array([[0,2],
+                                  [1,3]])
+        self.leg_pair_in_swing = np.array([False, False])
+        self.legpair_phases_remaining = np.array([0,0])
+        self.firstIt = True
+
+
+
