@@ -19,9 +19,9 @@ class ServoParams:
         self.neutral_angle_degrees = servo_calibration.NEUTRAL_ANGLE_DEGREES
 
         self.servo_multipliers = np.array(
-                                [[ 1, -1, 1, -1],
-                                 [ 1, 1, 1, 1],
-                                 [ 1, 1, 1, 1]]
+                                [[ 1, 1, 1, 1],
+                                 [ 1, -1, 1, 1],
+                                 [ 1, -1, 1, 1]]
                                 )# TODO: Find array of sign changes for servos
 
     @property # The property decorator makes sure that if neutral_angle_degrees is updated then neutral_angle updates
@@ -38,8 +38,12 @@ class RobotConfig:
             self.abduction_offset,
             -self.abduction_offset
         ])
+
         self.leg_up =0.08# TODO: Insert length of upper leg
         self.leg_low =0.08# TODO: Insert length of lower leg
+        self.body_width = 0.1# TODO: Insert width of body
+        self.body_length = 0.2# TODO: Insert length of body
+        self.body_height = 0.1131# TODO: Insert height to leg origin at neutral stance
 
         #-------------- Gait parameters ----------------
         self.arcR = 0.012
