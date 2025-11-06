@@ -59,5 +59,9 @@ class RobotConfig:
         self.legpair_phases_remaining = np.array([0,0])
         self.firstIt = True
 
+        #-------------- Controller parameters ----------------
+        self.L3 = [0, 0]
+        self.R3 = [0, 0]
+
 
 

@@ -13,21 +13,21 @@ class DogController(Controller):
     MAX_POS = 2**15 - 1
 
     def __init__(self, **kwargs):
-        super().__init__(self, **kwargs)
+        Controller.__init__(self, **kwargs)
         self.L3_coordinates = [0, 0]
         self.R3_coordinates = [0, 0]
 
     def on_L3_up(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
 
     def on_L3_down(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
 
     def on_L3_left(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
 
     def on_L3_right(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_L3_x_at_rest(self):
@@ -38,16 +38,18 @@ class DogController(Controller):
         pass
 
     def on_R3_up(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
+        if abs(value) > self.DEAD_ZONE:
+            print('up')
 
     def on_R3_down(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
 
     def on_R3_left(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
 
     def on_R3_right(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_R3_x_at_rest(self):
@@ -65,10 +67,10 @@ class DogController(Controller):
                 coordinates[direction] = self.map_coordinates_y(value)
             elif direction == self.VERTICAL:
                 coordinates[direction] = self.map_coordinates_x(value)
+            print(f"L3: {self.L3_coordinates}\n R3: {self.R3_coordinates}\n")
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
-        print(f"L3: {self.L3_coordinates}\n R3: {self.R3_coordinates}\n")
         return
 
     # Map from -1 to 1 for sideways speed
@@ -79,8 +81,8 @@ class DogController(Controller):
     @staticmethod
     def map_coordinates_x(value):
         if value > 0:
-            return 1
-        if value < 0:
             return -1
+        if value < 0:
+            return 1
         else:
             return 0
