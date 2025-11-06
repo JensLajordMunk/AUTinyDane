@@ -68,6 +68,7 @@ class DogController(Controller):
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
+        print(f"L3: {self.L3_coordinates}\n R3: {self.R3_coordinates}\n")
         return
 
     # Map from -1 to 1 for sideways speed
