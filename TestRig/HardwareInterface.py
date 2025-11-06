@@ -17,8 +17,8 @@ class HardwareInterface:
             [0, 1, 2],  # leg 0, front left
             [4, 5, 6],  # leg 1, front right
             [8, 9, 10],  # leg 2, rear left
-            [15, 13, 14],  # leg 3, rear right
-        ] #TODO: Determine actual wiring
+            [12, 13, 14],  # leg 3, rear right
+        ]
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -26,7 +26,6 @@ class HardwareInterface:
                 joint_angle = joint_angles[motor_index,leg_index]
                 self.servo_command(leg_index, motor_index, joint_angle)
 
-    # Used in calibrate_servos.py to calibrate the ServoCalibration.py
     def set_actuator_position(self, joint_angle, leg_index, motor_index):
         self.servo_command(leg_index, motor_index, joint_angle)
 
@@ -42,6 +41,25 @@ class HardwareInterface:
         """
         ch = self.channels[leg_index][motor_index]
         duty_cycle = angle_to_duty(joint_angle, self.pwm_params, self.servo_params, motor_index, leg_index)
+
+        # Sets the duty cycle on the given channel
+        self.pca.channels[ch].duty_cycle = duty_cycle
+
+    # Used in calibrate_servos.py to calibrate the ServoCalibration.py
+    def set_actuator_position0(self, joint_angle, leg_index, motor_index):
+        self.servo_command0(leg_index, motor_index, joint_angle)
+
+    def servo_command0(self, leg_index, motor_index, joint_angle):
+        """
+        Sends a servo command to the given channel on the pca by converting the
+        joint angle to a duty cycle and sending it to the channel
+
+        :param leg_index:
+        :param motor_index:
+        :param joint_angle:
+        """
+        ch = self.channels[leg_index][motor_index]
+        duty_cycle = angle_to_duty0(joint_angle, self.pwm_params, self.servo_params, motor_index, leg_index)
 
         # Sets the duty cycle on the given channel
         self.pca.channels[ch].duty_cycle = duty_cycle
@@ -63,6 +81,31 @@ def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
     angle_deviation = (
         angle - servo_params.neutral_angles[motor_index, leg_index]
     ) * servo_params.servo_multipliers[motor_index, leg_index]
+
+    # Calculates the pulse width in µs
+    pulse_width_micros = (
+        servo_params.neutral_position_pwm[motor_index,leg_index]
+        + servo_params.micros_per_rad[motor_index,leg_index] * angle_deviation
+    )
+
+    # Calculates duty cycle from pulse width, frequency and range
+    return int(pulse_width_micros / 1e6 * pwm_params.freq * pwm_params.range)
+
+def angle_to_duty0(angle, pwm_params, servo_params, motor_index, leg_index):
+
+    """
+    Converts the given angle to a duty cycle for the given leg and motor
+
+    :param angle: Desired angle from axis (in radians)
+    :param pwm_params:
+    :param servo_params:
+    :param motor_index:
+    :param leg_index:
+    :return: duty cycle
+    """
+
+    # Finds the deviation from the neutral angle defined in ServoCalibration
+    angle_deviation = angle * servo_params.servo_multipliers[motor_index, leg_index]
 
     # Calculates the pulse width in µs
     pulse_width_micros = (
