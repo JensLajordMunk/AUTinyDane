@@ -1,24 +1,23 @@
 import numpy as np
-import board
+from board import SCL, SDA
 import busio
 from adafruit_pca9685 import PCA9685
 from Configuration import PWMParams, ServoParams
-
+ 
 class HardwareInterface:
     def __init__(self):
         self.pwm_params = PWMParams()
         self.servo_params = ServoParams()
 
-        self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.pca = PCA9685(self.i2c, address=0x40)
-        self.pca.frequency = self.pwm_params.freq
+        self.i2c = busio.I2C(SCL, SDA)
+        self.pca0 = PCA9685(self.i2c, address=0x40)
+        self.pca0.frequency = self.pwm_params.freq
+        #self.pca1 = PCA9685(self.i2c, address=0x41)
+        #self.pca1.frequency = self.pwm_params.freq
+        self.pca2 = PCA9685(self.i2c, address=0x42)
+        self.pca2.frequency = self.pwm_params.freq
 
-        self.channels = [
-            [0, 1, 2],  # leg 0, front left
-            [4, 5, 6],  # leg 1, front right
-            [8, 9, 10],  # leg 2, rear left
-            [12, 13, 14],  # leg 3, rear right
-        ]
+        self.channels = [0, 1, 2]
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -39,11 +38,18 @@ class HardwareInterface:
         :param motor_index:
         :param joint_angle:
         """
-        ch = self.channels[leg_index][motor_index]
+        ch = self.channels[motor_index]
         duty_cycle = angle_to_duty(joint_angle, self.pwm_params, self.servo_params, motor_index, leg_index)
 
         # Sets the duty cycle on the given channel
-        self.pca.channels[ch].duty_cycle = duty_cycle
+        if leg_index == 0:
+            self.pca0.channels[ch].duty_cycle = duty_cycle
+        #elif leg_index == 1:
+        #    self.pca1.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 1:
+            self.pca2.channels[ch].duty_cycle = duty_cycle
+        #elif leg_index == 3:
+        #    self.pca3.channels[ch].duty_cycle = duty_cycle
 
     # Used in calibrate_servos.py to calibrate the ServoCalibration.py
     def set_actuator_position0(self, joint_angle, leg_index, motor_index):
@@ -58,11 +64,18 @@ class HardwareInterface:
         :param motor_index:
         :param joint_angle:
         """
-        ch = self.channels[leg_index][motor_index]
+        ch = self.channels[motor_index]
         duty_cycle = angle_to_duty0(joint_angle, self.pwm_params, self.servo_params, motor_index, leg_index)
 
         # Sets the duty cycle on the given channel
-        self.pca.channels[ch].duty_cycle = duty_cycle
+        if leg_index == 0:
+            self.pca0.channels[ch].duty_cycle = duty_cycle
+        #elif leg_index == 1:
+        #    self.pca1.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 1:
+            self.pca2.channels[ch].duty_cycle = duty_cycle
+        #elif leg_index == 3:
+        #    self.pca3.channels[ch].duty_cycle = duty_cycle
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 

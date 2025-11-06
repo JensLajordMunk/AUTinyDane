@@ -74,3 +74,6 @@ def test_leg_movement():
             break
         except Exception as e:
             print("Serial/parse error:", e)
+
+
+test_leg_movement()

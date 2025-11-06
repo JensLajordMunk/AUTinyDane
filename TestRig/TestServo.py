@@ -70,4 +70,4 @@ def test_leg_params():
     print(f"The new neutral PWM is: {new_neutral_PWM}")
     print(f"The new micros per rad is: {new_micros_per_rad}")
 
-test_leg_params()
+test_leg_movement()

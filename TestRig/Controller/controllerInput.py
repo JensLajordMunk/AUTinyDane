@@ -1,9 +1,14 @@
-from .DogController import DogController
+from DogController import DogController
 from threading import Thread
 import time
 
+class test:
+    def __init__(self):
+        pass
+
 # Define controller from DogController
-controller = DogController(interface="/dev/input/js0", connecting_using_ds4drv=False)
+controller = DogController(test, interface="/dev/input/js0", connecting_using_ds4drv=False)
+
 
 
 def controller_listen(listen_time=0.03):
