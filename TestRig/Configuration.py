@@ -20,8 +20,8 @@ class ServoParams:
 
         self.servo_multipliers = np.array(
                                 [[ 1, 1, 1, 1],
-                                 [ 1, -1, 1, 1],
-                                 [ 1, -1, 1, 1]]
+                                 [ 1, -1, 1, -1],
+                                 [ 1, -1, 1, -1]]
                                 )# TODO: Find array of sign changes for servos
 
     @property # The property decorator makes sure that if neutral_angle_degrees is updated then neutral_angle updates
@@ -47,11 +47,11 @@ class RobotConfig:
 
         #-------------- Gait parameters ----------------
         self.arcR = 0.012
-        self.velocity = 0.1
-        self.stancetime = 1
+        self.velocity = 0.05
+        self.stancetime = 3
         self.swingtime = self.stancetime/3 # semi trot gait pattern
-        self.step_height = 0.06
-        self.frequency = 125
+        self.step_height = 0.05
+        self.frequency = 100
         self.Z_zero = 0.1131 # The height of the leg
         self.leg_pairs = np.array([[0,2],
                                   [1,3]])

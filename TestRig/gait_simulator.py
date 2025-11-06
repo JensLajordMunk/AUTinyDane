@@ -284,5 +284,5 @@ def plot_front_leg_joint_angles():
     plt.show()
 
 
-plot_front_leg_joint_angles()
-#test_swing_planner_animated()
+#plot_front_leg_joint_angles()
+test_swing_planner_animated()

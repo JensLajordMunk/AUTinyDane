@@ -17,7 +17,7 @@ class HardwareInterface:
             [0, 1, 2],  # leg 0, front left
             [4, 5, 6],  # leg 1, front right
             [8, 9, 10],  # leg 2, rear left
-            [12, 13, 14],  # leg 3, rear right
+            [15, 13, 14],  # leg 3, rear right
         ] #TODO: Determine actual wiring
 
     def set_actuator_positions(self, joint_angles):
