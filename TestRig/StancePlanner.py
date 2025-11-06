@@ -1,5 +1,4 @@
 import numpy as np
-from Configuration import RobotConfig
 
 class StancePlanner:
 

@@ -186,7 +186,7 @@ def test_swing_planner_animated():
     # Create animation (using the minimum length in case arrays differ)
     num_frames = min(len(fl_x), len(fr_x))
     anim = FuncAnimation(fig, update, init_func=init, frames=num_frames,
-                         interval=5, blit=False, repeat=True)
+                         interval=1, blit=False, repeat=True)
 
     plt.tight_layout()
     plt.show()

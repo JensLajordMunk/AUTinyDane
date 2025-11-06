@@ -47,8 +47,8 @@ class RobotConfig:
 
         #-------------- Gait parameters ----------------
         self.arcR = 0.012
-        self.velocity = 0.05
-        self.stancetime = 3
+        self.velocity = 0.075
+        self.stancetime = 2
         self.swingtime = self.stancetime/3 # semi trot gait pattern
         self.step_height = 0.05
         self.frequency = 100

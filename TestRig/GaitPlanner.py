@@ -1,4 +1,3 @@
-from Configuration import RobotConfig
 from SwingPlanner import SwingPlanner
 from StancePlanner import StancePlanner
 from HardwareInterface import HardwareInterface
