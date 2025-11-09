@@ -10,14 +10,20 @@ class SwingPlanner:
         return self.config.velocity*self.config.stancetime*0.5 # Raibert et al.
 
     def theta(self):
-        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), self.config.velocity*self.config.stancetime)
+        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(self.config.velocity*self.config.stancetime))
 
     def key_points(self):
         assert self.config.arcR * 2 < self.config.step_height, "The radius is too large compared to the step height"
-        x1 = -self.touchdown_location() - self.config.arcR*np.sin(self.theta())
-        x2 = -self.config.arcR*np.sin(self.theta())
-        z1 = self.config.arcR + np.sqrt(self.config.arcR**2 - (x1 + self.touchdown_location())**2)
-        z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.theta())
+        if self.config.velocity > 0:
+            x1 = -self.touchdown_location() - self.config.arcR*np.sin(self.theta())
+            x2 = -self.config.arcR*np.sin(self.theta())
+            z1 = self.config.arcR + np.cos(self.theta())*self.config.arcR
+            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.theta())
+        else:
+            x1 = -self.touchdown_location() + self.config.arcR*np.sin(self.theta())
+            x2 = self.config.arcR*np.sin(self.theta())
+            z1 = self.config.arcR + np.cos(self.theta())*self.config.arcR
+            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.theta())
         return x1, x2, z1, z2
 
     def bottom_arc_length(self): #Symmetry gives that the two bottom arcs are of equal length
@@ -42,20 +48,30 @@ class SwingPlanner:
     def m(self):
         x1, x2, z1, z2 = self.key_points()
         denominator = x2 - x1
-        assert denominator > 1e-10, "Denomitor is zero in linear calculation"
+        assert abs(denominator) > 1e-10, "Denomitor is zero in linear calculation"
         return (z2 - z1)/(x2 - x1)
 
     def arc_angles(self):
         x1, x2, z1, z2 = self.key_points()
-        angle1_start = -np.pi/2
-        angle1_end = np.pi/2 + self.theta()
+        if self.config.velocity > 0:
+            angle1_start = -np.pi/2
+            angle1_end = np.pi/2 + self.theta()
 
-        angle2_start = np.pi/2 + self.theta()
-        angle2_end = np.pi / 2 - self.theta()
+            angle2_start = np.pi/2 + self.theta()
+            angle2_end = np.pi / 2 - self.theta()
 
-        angle3_start = np.pi/2 - self.theta()
-        angle3_end = -np.pi / 2
+            angle3_start = np.pi/2 - self.theta()
+            angle3_end = -np.pi / 2
 
+        else:
+            angle1_start = -np.pi / 2
+            angle1_end = np.pi / 2 - self.theta()
+
+            angle2_start = np.pi / 2 - self.theta()
+            angle2_end = np.pi / 2 + self.theta()
+
+            angle3_start = np.pi / 2 + self.theta()
+            angle3_end = -np.pi / 2
         return angle1_start, angle1_end, angle2_start, angle2_end, angle3_start, angle3_end
 
     def f1(self,x):
@@ -68,7 +84,6 @@ class SwingPlanner:
 
     def f_lims(self):
         x1, x2, z1, z2 = self.key_points()
-
         lim1 = np.array([x1,x2])
         assert np.all(np.isfinite(lim1)), "lim3 is not finite"
         lim2 = np.array([-x2,-x1])
@@ -78,8 +93,13 @@ class SwingPlanner:
 
     def circular_discretizer(self, angle_start, angle_end, xcenter, zcenter, duration):
         n = max(2,int(duration * self.config.frequency))
-        if angle_start< angle_end:
-            angle_start+=2*np.pi
+
+        if self.config.velocity > 0:
+            if angle_start< angle_end:
+                angle_start+=2*np.pi
+        else:
+            if angle_start > angle_end:
+                angle_end += 2 * np.pi
 
         angles = np.linspace(angle_start,angle_end,n)
 
@@ -98,6 +118,7 @@ class SwingPlanner:
         lim1, lim2 = self.f_lims()
         bottom_arc_time, linear_length_time, top_arc_time = self.section_phase_times()
         angle1_start, angle1_end, angle2_start, angle2_end, angle3_start, angle3_end = self.arc_angles()
+
 
         x1_discretized, z1_discretized = self.circular_discretizer(angle1_start, angle1_end, -self.touchdown_location(), self.config.arcR, bottom_arc_time)
         assert np.all(np.isfinite(x1_discretized)), "x1_discretized is not finite"

@@ -19,12 +19,14 @@ sys.modules['HardwareInterface'] = type(sys)('HardwareInterface')
 sys.modules['HardwareInterface'].HardwareInterface = MockHardwareInterface
 
 from GaitPlanner import GaitPlanner
+from TurnPlanner import TurnPlanner
 
 class GaitSimulator:
 
     def __init__(self):
         self.config = RobotConfig()
         self.gait_planner = GaitPlanner(self.config)
+        self.turn_planner = TurnPlanner(self.config)
         self.state = State()
         self.hardware_interface = MockHardwareInterface()
         self.front_right = []
@@ -41,6 +43,8 @@ class GaitSimulator:
         self.front_right.append(blockRight)
 
         n=min(len(xswing),len(xstance))
+
+        self.turn_planner.Y_pos
 
         for phase in range(n):
 
