@@ -14,3 +14,8 @@ class StancePlanner:
         x_uni=np.linspace(self.touchdown_location(),-self.touchdown_location(),n)
         z_uni=np.zeros(n) -self.config.Z_zero
         return x_uni, z_uni
+
+    def linear_discretizer_manual(self, Xbegin,n):
+        x_uni=np.linspace(Xbegin,-self.touchdown_location(),n)
+        z_uni=np.zeros(n) -self.config.Z_zero
+        return x_uni, z_uni

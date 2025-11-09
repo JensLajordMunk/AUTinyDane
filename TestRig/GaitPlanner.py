@@ -40,13 +40,13 @@ class GaitPlanner():
         if self.config.firstIt:
 
             x1, z1 = self.stance_planner.linear_discretizer()
-            self.config.legpair_phases_remaining[0] = int(self.config.frequency * self.config.swingtime)
+            self.config.legpair_phases_remaining[1] = int(self.config.frequency * self.config.stancetime)
 
             td = self.swing_planner.touchdown_location()
             self.config.velocity = self.config.velocity
             self.config.stancetime = self.config.stancetime/3
             x0, z0 = self.stance_planner.linear_discretizer()
-            self.config.legpair_phases_remaining[1] = int(self.config.frequency * self.config.stancetime)
+            self.config.legpair_phases_remaining[0] = int(self.config.frequency * self.config.stancetime)
             x0 -=  2*td/3
 
             self.config.stancetime = self.config.stancetime*3
@@ -56,13 +56,13 @@ class GaitPlanner():
         else:
             if not self.config.leg_pair_in_swing[pair_index]:
                 xswing, zswing = self.swing_planner.discretizer()
-                self.config.legpair_phases_remaining[pair_index] = int(self.config.frequency * self.config.swingtime)
+                self.config.legpair_phases_remaining[pair_index] = int(len(xswing))
                 self.config.leg_pair_in_swing[pair_index] = True
                 return xswing, zswing
 
             else:
                 xstance, zstance = self.stance_planner.linear_discretizer()
-                self.config.legpair_phases_remaining[pair_index] = int(self.config.frequency * self.config.stancetime)
+                self.config.legpair_phases_remaining[pair_index] = int(len(xstance))
                 self.config.leg_pair_in_swing[pair_index] = False
                 return xstance, zstance
 

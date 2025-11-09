@@ -47,11 +47,11 @@ class RobotConfig:
 
         #-------------- Gait parameters ----------------
         self.arcR = 0.012
-        self.velocity = 0.075
+        self.velocity = 0.02
         self.stancetime = 2
         self.swingtime = self.stancetime/3 # semi trot gait pattern
         self.step_height = 0.05
-        self.frequency = 100
+        self.frequency = 50
         self.Z_zero = 0.1131 # The height of the leg
         self.leg_pairs = np.array([[0,2],
                                   [1,3]])

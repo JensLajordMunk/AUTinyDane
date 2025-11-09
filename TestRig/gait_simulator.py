@@ -19,102 +19,141 @@ sys.modules['HardwareInterface'] = type(sys)('HardwareInterface')
 sys.modules['HardwareInterface'].HardwareInterface = MockHardwareInterface
 
 from GaitPlanner import GaitPlanner
-from TurnPlanner import TurnPlanner
 
 class GaitSimulator:
 
     def __init__(self):
         self.config = RobotConfig()
         self.gait_planner = GaitPlanner(self.config)
-        self.turn_planner = TurnPlanner(self.config)
         self.state = State()
         self.hardware_interface = MockHardwareInterface()
         self.front_right = []
         self.front_left = []
 
+    def record_point(self, leg_index, pos_xyz):
+        xz = np.array([pos_xyz[0], pos_xyz[2]])
+        if leg_index == 0:
+            self.front_left.append(xz)
+        elif leg_index == 1:
+            self.front_right.append(xz)
+
     def simulator(self):
 
         ####################### Begin ############################
         xstance, zstance, xswing, zswing = self.gait_planner.trot_begin()
-
-        blockLeft=np.column_stack([xstance,zstance])
-        self.front_left.append(blockLeft)
-        blockRight=np.column_stack([xswing,zswing])
-        self.front_right.append(blockRight)
-
         n=min(len(xswing),len(xstance))
-
-        self.turn_planner.Y_pos
 
         for phase in range(n):
 
             loop_time = time.time()
 
             for leg_index in self.config.leg_pairs[0, :]:
-                current_angles_rad = inverse_kinematics(np.array([xstance[phase], 0, zstance[phase]]), leg_index, self.config)
+                positions_legpair0 = np.array([xstance[phase], 0, zstance[phase]])
+                current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                    self.state.foot_locations[motor_index,leg_index] = positions_legpair0[motor_index]
+                    self.record_point(leg_index, positions_legpair0)
 
             for leg_index in self.config.leg_pairs[1, :]:
-               current_angles_rad = inverse_kinematics(np.array([xswing[phase], 0, zswing[phase]]), leg_index, self.config)
+               positions_legpair1 = np.array([xswing[phase], 0, zswing[phase]])
+               current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                    self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
+                    self.record_point(leg_index, positions_legpair1)
 
             time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 
         #################### Cycle ########################
+
+        current_velocity = self.config.velocity
+        iter = 0
         cycle_start = time.time()
-        while 3 > time.time()-cycle_start:
+
+        while 5 > time.time()-cycle_start:
             loop_time = time.time()
 
             if self.config.firstIt:
                 x0, z0, x1, z1 = self.gait_planner.trot(self.config.leg_pair_in_swing[0], 0)
-
-                blockRight = np.column_stack([x1, z1])
-                self.front_right.append(blockRight)
-
-                blockLeft = np.column_stack([x0, z0])
-                self.front_left.append(blockLeft)
-
-                self.config.firstIt = False
                 lengthx0 = len(x0)
                 lengthx1 = len(x1)
 
+            elif abs(current_velocity - self.config.velocity) > 0.001:
+
+                progress_pair0 = 1.0 - (self.config.legpair_phases_remaining[0] / lengthx0)
+                progress_pair1 = 1.0 - (self.config.legpair_phases_remaining[1] / lengthx1)
+
+                if self.config.leg_pair_in_swing[0]:
+                    x0, z0 = self.gait_planner.swing_planner.discretizer()
+                    zero_index = np.ceil(progress_pair0 * lengthx0)
+                    lengthx0 = len(x0)
+                    self.config.legpair_phases_remaining[0] = lengthx0 - zero_index
+                else:
+                    n = self.config.legpair_phases_remaining[0]
+                    currentX0 = self.state.foot_locations[0,0]
+                    x0, z0 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX0,n)
+                    lengthx0 = len(x0)
+                    self.config.legpair_phases_remaining[0] = lengthx0
+
+                if self.config.leg_pair_in_swing[1]:
+                    x1, z1 = self.gait_planner.swing_planner.discretizer()
+                    one_index = np.ceil(progress_pair1 * lengthx1)
+                    lengthx1 = len(x1)
+                    self.config.legpair_phases_remaining[1] = lengthx1 - one_index
+                else:
+                    n = self.config.legpair_phases_remaining[1]
+                    currentX1 = self.state.foot_locations[0,1]
+                    x1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1,n)
+                    lengthx1 = len(x1)
+                    self.config.legpair_phases_remaining[1] = lengthx1
+
+
+                current_velocity = self.config.velocity
+
             if self.config.legpair_phases_remaining[0] == 0:
                 x0, z0 = self.gait_planner.trot(self.config.leg_pair_in_swing[0], 0)
-                blockLeft = np.column_stack([x0, z0])
-                self.front_left.append(blockLeft)
                 lengthx0 = len(x0)
 
             if self.config.legpair_phases_remaining[1] == 0:
                 x1, z1 = self.gait_planner.trot(self.config.leg_pair_in_swing[1], 1)
-                blockRight = np.column_stack([x1, z1])
-                self.front_right.append(blockRight)
                 lengthx1 = len(x1)
 
             for leg_index in self.config.leg_pairs[0, :]:
+                positions_legpair0 = np.array([x0[lengthx0 - self.config.legpair_phases_remaining[0]], 0, z0[lengthx0 - self.config.legpair_phases_remaining[0]]])
+                current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
-                    current_angles_rad = inverse_kinematics(np.array([x0[lengthx0-self.config.legpair_phases_remaining[0]], 0, z0[lengthx0-self.config.legpair_phases_remaining[0]]]), leg_index, self.config)
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                    self.state.foot_locations[motor_index, leg_index] = positions_legpair0[motor_index]
+                    self.record_point(leg_index, positions_legpair0)
 
             for leg_index in self.config.leg_pairs[1, :]:
+                positions_legpair1 = np.array([x1[lengthx1 - self.config.legpair_phases_remaining[1]], 0, z1[lengthx1 - self.config.legpair_phases_remaining[1]]])
+                current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                 for motor_index in range(3):
-                    current_angles_rad = inverse_kinematics(np.array([x1[lengthx1-self.config.legpair_phases_remaining[1]], 0, z1[lengthx1-self.config.legpair_phases_remaining[1]]]), leg_index, self.config)
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
-
-            time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
+                    self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
+                    self.record_point(leg_index, positions_legpair1)
 
 
             self.config.legpair_phases_remaining[0] -= 1
             self.config.legpair_phases_remaining[1] -= 1
+
+
+            iter+=1
+            if iter > 50 and iter%20 == 0:
+                self.config.velocity += 0.01
+
+
+            time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 
         return self.front_left, self.front_right
 
 
 sim = GaitSimulator()
 fl, fr = sim.simulator()
-fl = np.vstack(fl)
-fr = np.vstack(fr)
+fl = np.asarray(fl)
+fr = np.asarray(fr)
 
 def test_swing_planner_animated():
 
@@ -134,7 +173,7 @@ def test_swing_planner_animated():
     ax1.set_xlim(min(fl_x) - x_margin, max(fl_x) + x_margin)
     ax1.set_ylim(min(fl_z) - z_margin, max(fl_z) + z_margin)
     ax1.set_ylabel('Z Position (m)', fontsize=12)
-    ax1.set_title(f'Front Left Leg Trajectory ({len(fl_x)} points)', fontsize=14)
+    ax1.set_title(f'Front Left Leg Trajectory', fontsize=14)
     ax1.grid(True, alpha=0.3)
     ax1.set_aspect('equal')
 
@@ -145,7 +184,7 @@ def test_swing_planner_animated():
     ax2.set_ylim(min(fr_z) - z_margin, max(fr_z) + z_margin)
     ax2.set_xlabel('X Position (m)', fontsize=12)
     ax2.set_ylabel('Z Position (m)', fontsize=12)
-    ax2.set_title(f'Front Right Leg Trajectory ({len(fr_x)} points)', fontsize=14)
+    ax2.set_title(f'Front Right Leg Trajectory', fontsize=14)
     ax2.grid(True, alpha=0.3)
     ax2.set_aspect('equal')
 
@@ -177,20 +216,18 @@ def test_swing_planner_animated():
         line_l.set_data(fl_x[:frame+1], fl_z[:frame+1])
         points_l.set_data(fl_x[:frame+1], fl_z[:frame+1])
         current_l.set_data([fl_x[frame]], [fl_z[frame]])
-        ax1.set_title(f'Front Left - Point {frame + 1}/{len(fl_x)}', fontsize=14)
 
         # Update right leg
         line_r.set_data(fr_x[:frame+1], fr_z[:frame+1])
         points_r.set_data(fr_x[:frame+1], fr_z[:frame+1])
         current_r.set_data([fr_x[frame]], [fr_z[frame]])
-        ax2.set_title(f'Front Right - Point {frame + 1}/{len(fr_x)}', fontsize=14)
 
         return line_l, points_l, current_l, line_r, points_r, current_r
 
     # Create animation (using the minimum length in case arrays differ)
     num_frames = min(len(fl_x), len(fr_x))
     anim = FuncAnimation(fig, update, init_func=init, frames=num_frames,
-                         interval=1, blit=False, repeat=True)
+                         interval=5, blit=False, repeat=True)
 
     plt.tight_layout()
     plt.show()
