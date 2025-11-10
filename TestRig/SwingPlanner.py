@@ -2,19 +2,20 @@ import numpy as np
 
 class SwingPlanner:
 
-    def __init__(self,config):
+    def __init__(self, state, config):
         self.config = config
+        self.state = state
 
     def touchdown_location(self):
         # TODO: Define values in Config
-        return self.config.velocity*self.config.stancetime*0.5 # Raibert et al.
+        return self.state.velocity*self.config.stancetime*0.5 # Raibert et al.
 
     def theta(self):
-        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(self.config.velocity*self.config.stancetime))
+        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(self.state.velocity*self.config.stancetime))
 
     def key_points(self):
         assert self.config.arcR * 2 < self.config.step_height, "The radius is too large compared to the step height"
-        if self.config.velocity > 0:
+        if self.state.velocity > 0:
             x1 = -self.touchdown_location() - self.config.arcR*np.sin(self.theta())
             x2 = -self.config.arcR*np.sin(self.theta())
             z1 = self.config.arcR + np.cos(self.theta())*self.config.arcR
@@ -53,7 +54,7 @@ class SwingPlanner:
 
     def arc_angles(self):
         x1, x2, z1, z2 = self.key_points()
-        if self.config.velocity > 0:
+        if self.state.velocity > 0:
             angle1_start = -np.pi/2
             angle1_end = np.pi/2 + self.theta()
 
@@ -94,7 +95,7 @@ class SwingPlanner:
     def circular_discretizer(self, angle_start, angle_end, xcenter, zcenter, duration):
         n = max(2,int(duration * self.config.frequency))
 
-        if self.config.velocity > 0:
+        if self.state.velocity > 0:
             if angle_start< angle_end:
                 angle_start+=2*np.pi
         else:
@@ -141,6 +142,6 @@ class SwingPlanner:
         assert np.all(np.isfinite(z5_discretized)), "z6_discretized is not finite"
 
         x_discrete = np.concatenate([x1_discretized,x2_discretized,x3_discretized,x4_discretized,x5_discretized])
-        z_discrete = np.concatenate([z1_discretized, z2_discretized, z3_discretized, z4_discretized, z5_discretized]) - self.config.Z_zero
+        z_discrete = np.concatenate([z1_discretized, z2_discretized, z3_discretized, z4_discretized, z5_discretized]) - self.config.body_height
 
         return x_discrete, z_discrete

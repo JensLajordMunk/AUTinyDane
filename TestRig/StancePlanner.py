@@ -2,20 +2,21 @@ import numpy as np
 
 class StancePlanner:
 
-    def __init__(self,config):
+    def __init__(self,state,config):
+        self.state = state
         self.config = config
 
     def touchdown_location(self):
         # TODO: Define values in Config
-        return self.config.velocity*self.config.stancetime*0.5 # Raibert et al.
+        return self.state.velocity*self.config.stancetime*0.5 # Raibert et al.
 
     def linear_discretizer(self):
         n = max(2,int(self.config.stancetime * self.config.frequency))
         x_uni=np.linspace(self.touchdown_location(),-self.touchdown_location(),n)
-        z_uni=np.zeros(n) -self.config.Z_zero
+        z_uni=np.zeros(n) -self.config.body_height
         return x_uni, z_uni
 
     def linear_discretizer_manual(self, Xbegin,n):
         x_uni=np.linspace(Xbegin,-self.touchdown_location(),n)
-        z_uni=np.zeros(n) -self.config.Z_zero
+        z_uni=np.zeros(n) -self.config.body_height
         return x_uni, z_uni

@@ -7,6 +7,7 @@ from Configuration import RobotConfig
 from State import State
 from collections import deque
 from Kinematics import inverse_kinematics
+from Command import Command
 import time
 import sys
 
@@ -24,8 +25,9 @@ class GaitSimulator:
 
     def __init__(self):
         self.config = RobotConfig()
-        self.gait_planner = GaitPlanner(self.config)
-        self.state = State()
+        self.state = State(self.config)
+        self.command = Command(self.config)
+        self.gait_planner = GaitPlanner(self.config, self.state)
         self.hardware_interface = MockHardwareInterface()
         self.front_right = []
         self.front_left = []
@@ -67,60 +69,59 @@ class GaitSimulator:
 
         #################### Cycle ########################
 
-        current_velocity = self.config.velocity
         iter = 0
         cycle_start = time.time()
 
         while 5 > time.time()-cycle_start:
             loop_time = time.time()
 
-            if self.config.firstIt:
-                x0, z0, x1, z1 = self.gait_planner.trot(self.config.leg_pair_in_swing[0], 0)
+            if self.state.firstIt:
+                x0, z0, x1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
                 lengthx0 = len(x0)
                 lengthx1 = len(x1)
 
-            elif abs(current_velocity - self.config.velocity) > 0.001:
+            elif abs(self.state.velocity- self.command.velocity) > 0.001:
 
-                progress_pair0 = 1.0 - (self.config.legpair_phases_remaining[0] / lengthx0)
-                progress_pair1 = 1.0 - (self.config.legpair_phases_remaining[1] / lengthx1)
+                progress_pair0 = 1.0 - (self.state.legpair_phases_remaining[0] / lengthx0)
+                progress_pair1 = 1.0 - (self.state.legpair_phases_remaining[1] / lengthx1)
 
-                if self.config.leg_pair_in_swing[0]:
+                if self.state.leg_pair_in_swing[0]:
                     x0, z0 = self.gait_planner.swing_planner.discretizer()
                     zero_index = np.ceil(progress_pair0 * lengthx0)
                     lengthx0 = len(x0)
-                    self.config.legpair_phases_remaining[0] = lengthx0 - zero_index
+                    self.state.legpair_phases_remaining[0] = lengthx0 - zero_index
                 else:
-                    n = self.config.legpair_phases_remaining[0]
+                    n = self.state.legpair_phases_remaining[0]
                     currentX0 = self.state.foot_locations[0,0]
                     x0, z0 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX0,n)
                     lengthx0 = len(x0)
-                    self.config.legpair_phases_remaining[0] = lengthx0
+                    self.state.legpair_phases_remaining[0] = lengthx0
 
-                if self.config.leg_pair_in_swing[1]:
+                if self.state.leg_pair_in_swing[1]:
                     x1, z1 = self.gait_planner.swing_planner.discretizer()
                     one_index = np.ceil(progress_pair1 * lengthx1)
                     lengthx1 = len(x1)
-                    self.config.legpair_phases_remaining[1] = lengthx1 - one_index
+                    self.state.legpair_phases_remaining[1] = lengthx1 - one_index
                 else:
-                    n = self.config.legpair_phases_remaining[1]
+                    n = self.state.legpair_phases_remaining[1]
                     currentX1 = self.state.foot_locations[0,1]
                     x1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1,n)
                     lengthx1 = len(x1)
-                    self.config.legpair_phases_remaining[1] = lengthx1
+                    self.state.legpair_phases_remaining[1] = lengthx1
 
 
-                current_velocity = self.config.velocity
+                self.state.velocity = self.command.velocity
 
-            if self.config.legpair_phases_remaining[0] == 0:
-                x0, z0 = self.gait_planner.trot(self.config.leg_pair_in_swing[0], 0)
+            if self.state.legpair_phases_remaining[0] == 0:
+                x0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
                 lengthx0 = len(x0)
 
-            if self.config.legpair_phases_remaining[1] == 0:
-                x1, z1 = self.gait_planner.trot(self.config.leg_pair_in_swing[1], 1)
+            if self.state.legpair_phases_remaining[1] == 0:
+                x1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
                 lengthx1 = len(x1)
 
             for leg_index in self.config.leg_pairs[0, :]:
-                positions_legpair0 = np.array([x0[lengthx0 - self.config.legpair_phases_remaining[0]], 0, z0[lengthx0 - self.config.legpair_phases_remaining[0]]])
+                positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]], 0, z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
                 current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -128,22 +129,15 @@ class GaitSimulator:
                     self.record_point(leg_index, positions_legpair0)
 
             for leg_index in self.config.leg_pairs[1, :]:
-                positions_legpair1 = np.array([x1[lengthx1 - self.config.legpair_phases_remaining[1]], 0, z1[lengthx1 - self.config.legpair_phases_remaining[1]]])
+                positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]], 0, z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
                 current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
                     self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
                     self.record_point(leg_index, positions_legpair1)
 
-
-            self.config.legpair_phases_remaining[0] -= 1
-            self.config.legpair_phases_remaining[1] -= 1
-
-
-            iter+=1
-            if iter > 50 and iter%20 == 0:
-                self.config.velocity += 0.01
-
+            self.state.legpair_phases_remaining[0] -= 1
+            self.state.legpair_phases_remaining[1] -= 1
 
             time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 

@@ -47,21 +47,18 @@ class RobotConfig:
 
         #-------------- Gait parameters ----------------
         self.arcR = 0.012
-        self.velocity = 0.02
+        self.max_velocity = 0.02
+        self.max_pitch = 0 # TODO: Insert real max roll, pitch, velocity and yaw_rate
+        self.max_roll = 0
+        self.max_yaw_rate = 0.01
         self.stancetime = 2
         self.swingtime = self.stancetime/3 # semi trot gait pattern
         self.step_height = 0.05
         self.frequency = 50
-        self.Z_zero = 0.1131 # The height of the leg
         self.leg_pairs = np.array([[0,2],
                                   [1,3]])
-        self.leg_pair_in_swing = np.array([False, False])
-        self.legpair_phases_remaining = np.array([0,0])
-        self.firstIt = True
 
-        #-------------- Controller parameters ----------------
-        self.L3 = [0, 0]
-        self.R3 = [0, 0]
+
 
 
 
