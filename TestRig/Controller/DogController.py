@@ -12,22 +12,21 @@ class DogController(Controller):
     # Maximum and Minimum max positions of the controller joystick
     MAX_POS = 2**15 - 1
 
-    def __init__(self, **kwargs):
-        Controller.__init__(self, **kwargs)
-        self.L3_coordinates = [0, 0]
-        self.R3_coordinates = [0, 0]
+    def __init__(self, config, **kwargs):
+        super().__init__(self, **kwargs)
+        self.config = config
 
     def on_L3_up(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.config.L3, value, self.VERTICAL)
 
     def on_L3_down(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.config.L3, value, self.VERTICAL)
 
     def on_L3_left(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.config.L3, value, self.HORIZONTAL)
 
     def on_L3_right(self, value):
-        self.modify_coordinates(self.L3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.config.L3, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_L3_x_at_rest(self):
@@ -38,18 +37,18 @@ class DogController(Controller):
         pass
 
     def on_R3_up(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.config.R3, value, self.VERTICAL)
         if abs(value) > self.DEAD_ZONE:
             print('up')
 
     def on_R3_down(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.VERTICAL)
+        self.modify_coordinates(self.config.R3, value, self.VERTICAL)
 
     def on_R3_left(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.config.R3, value, self.HORIZONTAL)
 
     def on_R3_right(self, value):
-        self.modify_coordinates(self.R3_coordinates, value, self.HORIZONTAL)
+        self.modify_coordinates(self.config.R3, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_R3_x_at_rest(self):
@@ -67,7 +66,7 @@ class DogController(Controller):
                 coordinates[direction] = self.map_coordinates_y(value)
             elif direction == self.VERTICAL:
                 coordinates[direction] = self.map_coordinates_x(value)
-            print(f"L3: {self.L3_coordinates}\n R3: {self.R3_coordinates}\n")
+            print(f"L3: {self.config.L3}\n R3: {self.config.R3}\n")
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0

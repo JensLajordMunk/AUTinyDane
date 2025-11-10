@@ -6,8 +6,8 @@ import time
 controller = DogController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 
 
-def controller_listen(listen_time=0.03):
-    # Start seperate thread to listen for controller input
+def controller_listen(config, listen_time=0.03):
+    # Start separate thread to listen for controller input
     listener_thread = Thread(target=controller.listen, daemon=True)
     listener_thread.start()
 
