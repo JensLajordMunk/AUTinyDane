@@ -1,4 +1,5 @@
 from pyPS4Controller.controller import Controller
+from threading import Lock
 
 
 class DogController(Controller):
@@ -13,7 +14,7 @@ class DogController(Controller):
     MAX_POS = 2**15 - 1
 
     def __init__(self, config, **kwargs):
-        super().__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.config = config
 
     def on_L3_up(self, value):
@@ -38,8 +39,6 @@ class DogController(Controller):
 
     def on_R3_up(self, value):
         self.modify_coordinates(self.config.R3, value, self.VERTICAL)
-        if abs(value) > self.DEAD_ZONE:
-            print('up')
 
     def on_R3_down(self, value):
         self.modify_coordinates(self.config.R3, value, self.VERTICAL)
@@ -66,7 +65,7 @@ class DogController(Controller):
                 coordinates[direction] = self.map_coordinates_y(value)
             elif direction == self.VERTICAL:
                 coordinates[direction] = self.map_coordinates_x(value)
-            print(f"L3: {self.config.L3}\n R3: {self.config.R3}\n")
+            # print(f"L3: {self.config.L3}\n R3: {self.config.R3}\n")
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
