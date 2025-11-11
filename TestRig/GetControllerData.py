@@ -6,8 +6,8 @@ import time
 if __name__ == "__main__":
     testConfig = Configuration.RobotConfig()
     testCommand = Command.Command(testConfig)
-    print("Thread started.")
-    control_panel = controller_listen(commandConfig=testCommand)
+
+    control_panel = controller_listen(command_config=testCommand)
 
     i = 0
     while i <= 200:
@@ -15,4 +15,4 @@ if __name__ == "__main__":
         time.sleep(0.1)
         i += 1
 
-    controller_stop(control_panel)
+    controller_stop(testCommand, control_panel)

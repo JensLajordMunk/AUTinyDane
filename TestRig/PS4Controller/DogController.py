@@ -13,21 +13,21 @@ class DogController(Controller):
     # Maximum and Minimum max positions of the controller joystick
     MAX_POS = 2**15 - 1
 
-    def __init__(self, config, **kwargs):
+    def __init__(self, command_config, **kwargs):
         super().__init__(**kwargs)
-        self.config = config
+        self.command_config = command_config
 
     def on_L3_up(self, value):
-        self.modify_coordinates(self.config.L3, value, self.VERTICAL)
+        self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
 
     def on_L3_down(self, value):
-        self.modify_coordinates(self.config.L3, value, self.VERTICAL)
+        self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
 
     def on_L3_left(self, value):
-        self.modify_coordinates(self.config.L3, value, self.HORIZONTAL)
+        self.modify_coordinates(self.command_config.L3, value, self.HORIZONTAL)
 
     def on_L3_right(self, value):
-        self.modify_coordinates(self.config.L3, value, self.HORIZONTAL)
+        self.modify_coordinates(self.command_config.L3, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_L3_x_at_rest(self):
@@ -38,16 +38,16 @@ class DogController(Controller):
         pass
 
     def on_R3_up(self, value):
-        self.modify_coordinates(self.config.R3, value, self.VERTICAL)
+        self.modify_coordinates(self.command_config.R3, value, self.VERTICAL)
 
     def on_R3_down(self, value):
-        self.modify_coordinates(self.config.R3, value, self.VERTICAL)
+        self.modify_coordinates(self.command_config.R3, value, self.VERTICAL)
 
     def on_R3_left(self, value):
-        self.modify_coordinates(self.config.R3, value, self.HORIZONTAL)
+        self.modify_coordinates(self.command_config.R3, value, self.HORIZONTAL)
 
     def on_R3_right(self, value):
-        self.modify_coordinates(self.config.R3, value, self.HORIZONTAL)
+        self.modify_coordinates(self.command_config.R3, value, self.HORIZONTAL)
 
     # Reduce noise from console
     def on_R3_x_at_rest(self):

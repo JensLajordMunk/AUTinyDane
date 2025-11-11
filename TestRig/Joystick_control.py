@@ -89,7 +89,7 @@ def controller_movement(config, command, state):
 
     hardware_interface = HardwareInterface()
     print("Thread started.")
-    control_panel = controller_listen(commandConfig=testCommand)
+    control_panel = controller_listen(command_config=testCommand)
     y = 0.04
     x = 0
 
