@@ -1,16 +1,19 @@
-from Controller.controllerInput import controller_listen
+from Controller.controllerInput import controller_listen, controller_stop
 import Configuration
 import time
 
-def modify_config(config):
-    data = controller_listen()
-    config.R3 = data[1]
-    config.L3 = data[0]
-
 if __name__ == "__main__":
-    testConfig = Configuration.RobotConfig
+    testConfig = Configuration.RobotConfig()
     startTime = time.time()
-    modify_config(testConfig)
+    print("Thread started.")
+    control_panel = controller_listen(config=testConfig)
     endTime = time.time()
-    print(endTime-startTime)
-    print(testConfig.R3, testConfig.L3)
+    print(endTime - startTime)
+
+i = 0
+while i <= 200:
+    print(testConfig.L3, testConfig.R3)
+    time.sleep(0.1)
+    i += 1
+
+controller_stop(control_panel)
