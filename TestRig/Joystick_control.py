@@ -122,9 +122,6 @@ def controller_movement(config, command, state):
 
     
 
-
-
-
 if __name__ == "__main__":
     testConfig = RobotConfig()
     testCommand = Command.Command(testConfig)
