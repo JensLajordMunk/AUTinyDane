@@ -1,19 +1,18 @@
-from Controller.controllerInput import controller_listen, controller_stop
+from PS4Controller.controllerInput import controller_listen, controller_stop
+import Command
 import Configuration
 import time
 
 if __name__ == "__main__":
     testConfig = Configuration.RobotConfig()
-    startTime = time.time()
+    testCommand = Command.Command(testConfig)
     print("Thread started.")
-    control_panel = controller_listen(config=testConfig)
-    endTime = time.time()
-    print(endTime - startTime)
+    control_panel = controller_listen(commandConfig=testCommand)
 
-i = 0
-while i <= 200:
-    print(testConfig.L3, testConfig.R3)
-    time.sleep(0.1)
-    i += 1
+    i = 0
+    while i <= 200:
+        print(testCommand.L3, testCommand.R3)
+        time.sleep(0.1)
+        i += 1
 
-controller_stop(control_panel)
+    controller_stop(control_panel)

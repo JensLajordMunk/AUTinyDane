@@ -64,7 +64,7 @@ class DogController(Controller):
             if direction == self.HORIZONTAL:
                 coordinates[direction] = self.map_coordinates_y(value)
             elif direction == self.VERTICAL:
-                coordinates[direction] = self.map_coordinates_x(value)
+                coordinates[direction] = self.map_coordinates_y(value)
             # print(f"L3: {self.config.L3}\n R3: {self.config.R3}\n")
         else:
             # If not outside dead zone the direction should be 0
@@ -74,7 +74,7 @@ class DogController(Controller):
     # Map from -1 to 1 for sideways speed
     def map_coordinates_y(self, value):
         return value / self.MAX_POS
-
+"""
     # Return value 1 or -1 for forward and backwards
     @staticmethod
     def map_coordinates_x(value):
@@ -84,3 +84,4 @@ class DogController(Controller):
             return 1
         else:
             return 0
+"""

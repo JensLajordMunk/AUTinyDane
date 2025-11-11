@@ -1,9 +1,12 @@
+from PS4Controller.controllerInput import controller_listen, controller_stop
 import serial
 import time
 import numpy as np
 from Configuration import RobotConfig
 from Kinematics import inverse_kinematics
 from HardwareInterface import HardwareInterface
+import Command
+import State
 # ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 
 def test_leg_movement():
@@ -74,3 +77,59 @@ def test_leg_movement():
             break
         except Exception as e:
             print("Serial/parse error:", e)
+
+def controller_movement(config, command, state):
+    leg_index = int(input("Enter leg index (0-3): "))
+    # --- constants ---
+    y_fixed = 0.04              # [m]
+    x_range = (-0.03, 0.05)     # backward → forward
+    z_range = (-0.045, -0.12)    # down → up
+    update_hz = 50
+    dt = 1.0 / update_hz
+
+    hardware_interface = HardwareInterface()
+    print("Thread started.")
+    control_panel = controller_listen(commandConfig=testCommand)
+    y = 0.04
+    x = 0
+
+
+    while True:
+        try:
+            z = np.interp(command.L3[1], (-1, 1), z_range)
+
+            # compute inverse kinematics
+            try:
+                target_angles = inverse_kinematics(np.array([x, y, z]), leg_index, config)
+            except ValueError as e:
+                print(f"Inverse kinematics error: {e}")
+                pass
+
+            # send angles to the actuators (1 leg = 3 motors)
+            for motor_index in range(3):
+                hardware_interface.set_actuator_position(
+                    target_angles[motor_index], leg_index, motor_index
+                )
+
+            # optional: print status
+            print(f"x={x:+.3f} z={z:+.3f} -> [abd, hip, knee] = {np.degrees(target_angles)} deg")
+
+            time.sleep(dt)
+        except Exception as e:
+            print(Exception)
+            break
+
+
+    
+
+
+
+
+if __name__ == "__main__":
+    testConfig = RobotConfig()
+    testCommand = Command.Command(testConfig)
+    testState = State.State(testConfig)
+
+    controller_movement(testConfig, testCommand, testState)
+
+

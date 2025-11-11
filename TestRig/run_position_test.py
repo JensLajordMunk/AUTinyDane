@@ -79,7 +79,7 @@ def test_main_2():
 def test_main_4():
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
-    state = State()
+    state = State(configuration)
 
 
     x1, y1, z1 = map(float, input("UPDATE NEUTRAL ANGLES BEFORE. Enter position for left legs(unit [m]): x y z").split())
@@ -120,7 +120,7 @@ def test_main_4():
 def complete_kinematics_test():
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
-    state = State()
+    state = State(configuration)
 
     x, y, z = map(float,
                      input("Enter body center movement: x y z").split())

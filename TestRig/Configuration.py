@@ -64,6 +64,9 @@ class RobotConfig:
         self.legpair_phases_remaining = np.array([0, 0])
         self.firstIt = True
 
-        # -------------- Controller parameters ----------------
-        self.L3 = [0, 0]
-        self.R3 = [0, 0]
+
+        # -------------- Max parameters ----------------
+        self.max_velocity = 0.02
+        self.max_yaw_rate = 0
+        self.max_pitch = 0
+        self.max_roll = 0
