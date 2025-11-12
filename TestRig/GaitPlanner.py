@@ -15,56 +15,66 @@ class GaitPlanner():
         self.swing_planner = SwingPlanner(self.state, self.config)
 
     def trot_begin(self):
-        velocity = self.state.velocity
+        velocityX = self.state.velocityX
+        velocityY = self.state.velocityY
         self.config.swingtime = self.config.swingtime * 3 #Equal swing and stance time
-        self.state.velocity = 0.5*velocity # puts leg at the front touchdown location
+        self.state.velocityX = 0.5 * velocityX # puts leg at the front touchdown location
+        self.state.velocityY = 0.5 * velocityY
 
-        xswing,zswing = self.swing_planner.discretizer()
-        xswing += self.swing_planner.touchdown_location()
+        xswing, yswing, zswing = self.swing_planner.discretizer()
+        TDX, TDY = self.swing_planner.touchdown_location()
+        xswing += TDX
+        yswing += TDY
         self.config.swingtime = self.config.swingtime/3 # resets swingtime
 
-        self.state.velocity = velocity/6 # puts leg in rightposition 2/3 of the way back from desired touchdown
-        xstance,zstance = self.stance_planner.linear_discretizer()
-        xstance -= self.swing_planner.touchdown_location()
+        self.state.velocityX = velocityX/6 # puts leg in rightposition 2/3 of the way back from desired touchdown
+        self.state.velocityY = velocityY/6
+        xstance, ystance, zstance = self.stance_planner.linear_discretizer()
+        TDX, TDY = self.swing_planner.touchdown_location()
+        xstance -= TDX
+        ystance -= TDY
 
-        self.state.velocity = velocity #resets velocity
+        self.state.velocityX = velocityX #resets velocity
+        self.state.velocityY = velocityY  # resets velocity
         initial_phases = int(self.config.frequency * self.config.stancetime)
 
         self.state.legpair_phases_remaining[0] = initial_phases
         self.state.legpair_phases_remaining[1] = initial_phases
 
-        return xstance, zstance, xswing, zswing
+        return xstance, ystance, zstance, xswing, yswing, zswing
 
 
     def trot(self, InSwing, pair_index):
 
+
         if self.state.firstIt:
 
-            x1, z1 = self.stance_planner.linear_discretizer()
+            x1, y1, z1 = self.stance_planner.linear_discretizer()
             self.state.legpair_phases_remaining[1] = int(self.config.frequency * self.config.stancetime)
 
-            td = self.swing_planner.touchdown_location()
+            TDX, TDY = self.swing_planner.touchdown_location()
             self.config.stancetime = self.config.stancetime/3
-            x0, z0 = self.stance_planner.linear_discretizer()
+            x0, y0, z0 = self.stance_planner.linear_discretizer()
             self.state.legpair_phases_remaining[0] = int(self.config.frequency * self.config.stancetime)
-            x0 -=  2*td/3
+            x0 -= 2*TDX/3
+            y0 -= 2*TDY/3
 
             self.config.stancetime = self.config.stancetime*3
             self.state.firstIt = False
-            return x0, z0, x1, z1
+            return x0, y0, z0, x1, y1, z1
 
         else:
             if not self.state.leg_pair_in_swing[pair_index]:
-                xswing, zswing = self.swing_planner.discretizer()
+                xswing, yswing, zswing = self.swing_planner.discretizer()
                 self.state.legpair_phases_remaining[pair_index] = int(len(xswing))
                 self.state.leg_pair_in_swing[pair_index] = True
-                return xswing, zswing
+                return xswing, yswing, zswing
 
             else:
-                xstance, zstance = self.stance_planner.linear_discretizer()
+                xstance, ystance, zstance = self.stance_planner.linear_discretizer()
                 self.state.legpair_phases_remaining[pair_index] = int(len(xstance))
                 self.state.leg_pair_in_swing[pair_index] = False
-                return xstance, zstance
+                return xstance, ystance, zstance
 
 
 

@@ -57,16 +57,14 @@ class RobotConfig:
         self.stancetime = 2
         self.swingtime = self.stancetime / 3  # semi trot gait pattern
         self.step_height = 0.05
-        self.frequency = 50
-        self.Z_zero = 0.1131  # The height of the leg
+        self.frequency = 100
         self.leg_pairs = np.array([[0, 2], [1, 3]])
-        self.leg_pair_in_swing = np.array([False, False])
-        self.legpair_phases_remaining = np.array([0, 0])
-        self.firstIt = True
+
 
 
         # -------------- Max parameters ----------------
-        self.max_velocity = 0.02
+        self.max_velocityX = 0.02
+        self.max_velocityY = 0.06
         self.max_yaw_rate = 0
         self.max_pitch = 0
         self.max_roll = 0

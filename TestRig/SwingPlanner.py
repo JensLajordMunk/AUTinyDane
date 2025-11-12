@@ -8,31 +8,53 @@ class SwingPlanner:
 
     def touchdown_location(self):
         # TODO: Define values in Config
-        return self.state.velocity*self.config.stancetime*0.5 # Raibert et al.
+        TDX = self.state.velocityX * self.config.stancetime * 0.5
+        TDY = self.state.velocityY * self.config.stancetime * 0.5
+        return TDX, TDY # Raibert et al.
 
-    def theta(self):
-        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(self.state.velocity*self.config.stancetime))
+    def thetaZ(self):
+        absVel = np.sqrt( self.state.velocityX**2 + self.state.velocityY**2)
+        return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(absVel*self.config.stancetime))
+
+    def velAngle(self):
+        return np.arctan2(self.state.velocityY, self.state.velocityX)
 
     def key_points(self):
         assert self.config.arcR * 2 < self.config.step_height, "The radius is too large compared to the step height"
-        if self.state.velocity > 0:
-            x1 = -self.touchdown_location() - self.config.arcR*np.sin(self.theta())
-            x2 = -self.config.arcR*np.sin(self.theta())
-            z1 = self.config.arcR + np.cos(self.theta())*self.config.arcR
-            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.theta())
+
+        TDX, TDY = self.touchdown_location()
+
+        signx = 1 if self.state.velocityX >= 0 else -1
+        signy = 1 if self.state.velocityY >= 0 else -1
+        if signx<0 and signy>0:
+            x1 = (-np.sqrt(TDX ** 2 + TDY ** 2) - self.config.arcR * np.sin(self.thetaZ())) * np.cos(self.velAngle())
+            x2 = -self.config.arcR*np.cos(self.velAngle())*np.sin(self.thetaZ())*signy
+            y1 = (-np.sqrt(TDX**2+TDY**2) - self.config.arcR*np.sin(self.thetaZ())) * np.sin(self.velAngle())
+            y2 = -self.config.arcR*np.sin(self.velAngle())*np.sin(self.thetaZ())*signy
+            z1 = self.config.arcR + np.cos(self.thetaZ()) * self.config.arcR
+            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.thetaZ())
+        elif signx>0 and signy<0:
+            x1 = (-np.sqrt(TDX ** 2 + TDY ** 2) - self.config.arcR * np.sin(self.thetaZ())) * np.cos(self.velAngle())
+            x2 = -self.config.arcR*np.cos(self.velAngle())*np.sin(self.thetaZ())*signx
+            y1 = (-np.sqrt(TDX**2+TDY**2) - self.config.arcR*np.sin(self.thetaZ())) * np.sin(self.velAngle())
+            y2 = -self.config.arcR*np.sin(self.velAngle())*np.sin(self.thetaZ())*signx
+            z1 = self.config.arcR + np.cos(self.thetaZ()) * self.config.arcR
+            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.thetaZ())
         else:
-            x1 = -self.touchdown_location() + self.config.arcR*np.sin(self.theta())
-            x2 = self.config.arcR*np.sin(self.theta())
-            z1 = self.config.arcR + np.cos(self.theta())*self.config.arcR
-            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.theta())
-        return x1, x2, z1, z2
+            x1 = (-np.sqrt(TDX ** 2 + TDY ** 2) - self.config.arcR * np.sin(self.thetaZ())) * np.cos(self.velAngle())
+            x2 = -self.config.arcR*np.cos(self.velAngle())*np.sin(self.thetaZ())
+            y1 = (-np.sqrt(TDX**2+TDY**2) - self.config.arcR*np.sin(self.thetaZ())) * np.sin(self.velAngle())
+            y2 = -self.config.arcR*np.sin(self.velAngle())*np.sin(self.thetaZ())
+            z1 = self.config.arcR + np.cos(self.thetaZ()) * self.config.arcR
+            z2 = self.config.step_height - self.config.arcR + self.config.arcR*np.cos(self.thetaZ())
+        return x1, x2, y1, y2, z1, z2
 
     def bottom_arc_length(self): #Symmetry gives that the two bottom arcs are of equal length
-        return 2*0.25*self.config.arcR*np.pi + self.config.arcR*(0.5*np.pi-self.theta())
+        return 2*0.25*self.config.arcR*np.pi + self.config.arcR*(0.5*np.pi-self.thetaZ())
 
     def linear_section_length(self):
-        x1, x2, z1, z2 = self.key_points()
-        return np.sqrt( (x2-x1)**2 + (z2-z1)**2 )
+        x1, x2, y1, y2, z1, z2 = self.key_points()
+        return np.sqrt( (x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2 )
 
     def half_top_arc_length(self):
         return np.pi*self.config.arcR-self.bottom_arc_length()
@@ -46,102 +68,89 @@ class SwingPlanner:
         top_arc_time = self.config.swingtime*2*self.half_top_arc_length()/self.total_swing_length()
         return bottom_arc_time, linear_length_time, top_arc_time
 
-    def m(self):
-        x1, x2, z1, z2 = self.key_points()
-        denominator = x2 - x1
-        assert abs(denominator) > 1e-10, "Denomitor is zero in linear calculation"
-        return (z2 - z1)/(x2 - x1)
-
     def arc_angles(self):
-        x1, x2, z1, z2 = self.key_points()
-        if self.state.velocity > 0:
-            angle1_start = -np.pi/2
-            angle1_end = np.pi/2 + self.theta()
+        signx = 1 if self.state.velocityX >= 0 else -1
+        signy = 1 if self.state.velocityY >= 0 else -1
 
-            angle2_start = np.pi/2 + self.theta()
-            angle2_end = np.pi / 2 - self.theta()
+        angle1_start = -np.pi/2
+        angle1_end = np.pi/2 + self.thetaZ()
 
-            angle3_start = np.pi/2 - self.theta()
-            angle3_end = -np.pi / 2
+        angle2_start = np.pi/2 + self.thetaZ()
+        angle2_end = np.pi / 2 - self.thetaZ()
 
-        else:
-            angle1_start = -np.pi / 2
-            angle1_end = np.pi / 2 - self.theta()
+        angle3_start = np.pi/2 - self.thetaZ()
+        angle3_end = -np.pi / 2
 
-            angle2_start = np.pi / 2 - self.theta()
-            angle2_end = np.pi / 2 + self.theta()
-
-            angle3_start = np.pi / 2 + self.theta()
-            angle3_end = -np.pi / 2
         return angle1_start, angle1_end, angle2_start, angle2_end, angle3_start, angle3_end
 
-    def f1(self,x):
-        x1, x2, z1, z2 = self.key_points()
-        return self.m() * (x - x1) + z1
-
-    def f2(self,x):
-        x1, x2, z1, z2 = self.key_points()
-        return -self.m() * (x + x1) + z1
-
     def f_lims(self):
-        x1, x2, z1, z2 = self.key_points()
+        x1, x2, y1, y2, z1, z2 = self.key_points()
         lim1 = np.array([x1,x2])
-        assert np.all(np.isfinite(lim1)), "lim3 is not finite"
+        assert np.all(np.isfinite(lim1)), "lim1 is not finite"
         lim2 = np.array([-x2,-x1])
-        assert np.all(np.isfinite(lim2)), "lim5 is not finite"
+        assert np.all(np.isfinite(lim2)), "lim2 is not finite"
+        lim3 = np.array([y1,y2])
+        assert np.all(np.isfinite(lim3)), "lim3 is not finite"
+        lim4 = np.array([-y2,-y1])
+        assert np.all(np.isfinite(lim4)), "lim4 is not finite"
 
-        return lim1, lim2
+        return lim1, lim2, lim3, lim4
 
-    def circular_discretizer(self, angle_start, angle_end, xcenter, zcenter, duration):
+    def f1(self):
+        x1, x2, y1, y2, z1, z2 = self.key_points()
+        bottom_arc_time, linear_length_time, top_arc_time = self.section_phase_times()
+        n = max(2, int(linear_length_time * self.config.frequency))
+        lamd = np.linspace(0,1,n)
+        npvals = (1-lamd)*np.array([[x1],[y1],[z1]]) + lamd*np.array([[x2],[y2],[z2]])
+        return npvals[0], npvals[1], npvals[2]
+
+    def f2(self):
+        x1, x2, y1, y2, z1, z2 = self.key_points()
+        bottom_arc_time, linear_length_time, top_arc_time = self.section_phase_times()
+        n = max(2, int(linear_length_time * self.config.frequency))
+        lamd = np.linspace(0, 1, n)
+        npvals = (1-lamd)*np.array([[-x2],[-y2],[z2]]) + lamd*np.array([[-x1],[-y1],[z1]])
+        return npvals[0], npvals[1], npvals[2]
+
+    def circular_discretizer(self, angle_start, angle_end, xcenter, ycenter, zcenter, duration):
         n = max(2,int(duration * self.config.frequency))
 
-        if self.state.velocity > 0:
-            if angle_start< angle_end:
-                angle_start+=2*np.pi
+        sign_product = (1 if self.state.velocityX >= 0 else -1) * (1 if self.state.velocityY >= 0 else -1)
+
+        if sign_product > 0 :
+            if angle_start < angle_end:
+                angle_start += 2 * np.pi
         else:
-            if angle_start > angle_end:
-                angle_end += 2 * np.pi
+            if angle_start < angle_end:
+                angle_start += 2 * np.pi
+        angles = np.linspace(angle_start, angle_end, n)
 
-        angles = np.linspace(angle_start,angle_end,n)
+        unirform_arc = self.config.arcR*np.cos(angles)
 
-        x_uni = self.config.arcR*np.cos(angles) + xcenter
-        z_uni = self.config.arcR*np.sin(angles) + zcenter
-        return x_uni,z_uni
-
-    def linear_discretizer(self,numpy_func,limit,duration):
-        n = max(2,int(duration * self.config.frequency))
-        x_uni=np.linspace(limit[0],limit[1],n)
-        z_uni=numpy_func(x_uni)
-        return x_uni, z_uni
+        x_uni = unirform_arc * np.cos(self.velAngle()) + xcenter
+        y_uni = unirform_arc * np.sin(self.velAngle()) + ycenter
+        z_uni = self.config.arcR * np.sin(angles) + zcenter
+        return x_uni, y_uni, z_uni
 
     def discretizer(self):
 
-        lim1, lim2 = self.f_lims()
+        lim1, lim2, lim3, lim4 = self.f_lims()
         bottom_arc_time, linear_length_time, top_arc_time = self.section_phase_times()
         angle1_start, angle1_end, angle2_start, angle2_end, angle3_start, angle3_end = self.arc_angles()
+        TDX, TDY = self.touchdown_location()
 
+        x1_discretized, y1_discretized, z1_discretized = self.circular_discretizer(angle1_start, angle1_end, -TDX, -TDY, self.config.arcR, bottom_arc_time)
 
-        x1_discretized, z1_discretized = self.circular_discretizer(angle1_start, angle1_end, -self.touchdown_location(), self.config.arcR, bottom_arc_time)
-        assert np.all(np.isfinite(x1_discretized)), "x1_discretized is not finite"
-        assert np.all(np.isfinite(z1_discretized)), "z1_discretized is not finite"
+        x2_discretized, y2_discretized, z2_discretized = self.f1()
 
-        x2_discretized, z2_discretized = self.linear_discretizer(self.f1, lim1, linear_length_time)
-        assert np.all(np.isfinite(x2_discretized)), "x3_discretized is not finite"
-        assert np.all(np.isfinite(z2_discretized)), "z3_discretized is not finite"
+        x3_discretized, y3_discretized, z3_discretized = self.circular_discretizer(angle2_start, angle2_end, 0, 0, self.config.step_height-self.config.arcR, top_arc_time)
 
-        x3_discretized, z3_discretized = self.circular_discretizer(angle2_start, angle2_end, 0, self.config.step_height-self.config.arcR, top_arc_time)
-        assert np.all(np.isfinite(x3_discretized)), "x4_discretized is not finite"
-        assert np.all(np.isfinite(z3_discretized)), "z4_discretized is not finite"
+        x4_discretized, y4_discretized, z4_discretized = self.f2()
 
-        x4_discretized, z4_discretized = self.linear_discretizer(self.f2, lim2, linear_length_time)
-        assert np.all(np.isfinite(x4_discretized)), "x5_discretized is not finite"
-        assert np.all(np.isfinite(z4_discretized)), "z5_discretized is not finite"
+        x5_discretized, y5_discretized, z5_discretized = self.circular_discretizer(angle3_start, angle3_end, TDX, TDY, self.config.arcR, bottom_arc_time)
 
-        x5_discretized, z5_discretized = self.circular_discretizer(angle3_start, angle3_end, self.touchdown_location(), self.config.arcR, bottom_arc_time)
-        assert np.all(np.isfinite(x5_discretized)), "x6_discretized is not finite"
-        assert np.all(np.isfinite(z5_discretized)), "z6_discretized is not finite"
-
-        x_discrete = np.concatenate([x1_discretized,x2_discretized,x3_discretized,x4_discretized,x5_discretized])
+        x_discrete = np.concatenate([x1_discretized, x2_discretized, x3_discretized, x4_discretized, x5_discretized])
+        y_discrete = np.concatenate([y1_discretized, y2_discretized, y3_discretized, y4_discretized, y5_discretized])
         z_discrete = np.concatenate([z1_discretized, z2_discretized, z3_discretized, z4_discretized, z5_discretized]) - self.config.body_height
 
-        return x_discrete, z_discrete
+        return x_discrete, y_discrete, z_discrete

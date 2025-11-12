@@ -38,6 +38,11 @@ def complete_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
     theta_initial = np.arctan(y_global0/x_global0)
 
     # Distance from body center to leg origin
+
+
+
+
+    ############ Maybe change to pythagoras? ##########
     r = y_global0 / np.sin(theta_initial)
 
     # New angle:

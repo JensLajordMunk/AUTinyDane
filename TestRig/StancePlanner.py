@@ -8,15 +8,21 @@ class StancePlanner:
 
     def touchdown_location(self):
         # TODO: Define values in Config
-        return self.state.velocity*self.config.stancetime*0.5 # Raibert et al.
+        TDX = self.state.velocityX * self.config.stancetime * 0.5
+        TDY = self.state.velocityY * self.config.stancetime * 0.5
+        return TDX, TDY # Raibert et al.
 
     def linear_discretizer(self):
         n = max(2,int(self.config.stancetime * self.config.frequency))
-        x_uni=np.linspace(self.touchdown_location(),-self.touchdown_location(),n)
+        TDX, TDY = self.touchdown_location()
+        x_uni=np.linspace(TDX,-TDX,n)
+        y_uni = np.linspace(TDY, -TDY, n)
         z_uni=np.zeros(n) -self.config.body_height
-        return x_uni, z_uni
+        return x_uni, y_uni, z_uni
 
-    def linear_discretizer_manual(self, Xbegin,n):
-        x_uni=np.linspace(Xbegin,-self.touchdown_location(),n)
+    def linear_discretizer_manual(self, Xbegin, Ybegin,n):
+        TDX, TDY = self.touchdown_location()
+        x_uni = np.linspace(Xbegin,-TDX,n)
+        y_uni = np.linspace(Ybegin, -TDY, n)
         z_uni=np.zeros(n) -self.config.body_height
-        return x_uni, z_uni
+        return x_uni, y_uni, z_uni

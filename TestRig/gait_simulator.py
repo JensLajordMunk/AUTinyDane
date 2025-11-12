@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from Configuration import RobotConfig
 from State import State
-from collections import deque
 from Kinematics import inverse_kinematics
 from Command import Command
 import time
@@ -33,16 +32,16 @@ class GaitSimulator:
         self.front_left = []
 
     def record_point(self, leg_index, pos_xyz):
-        xz = np.array([pos_xyz[0], pos_xyz[2]])
+        xyz = np.array([pos_xyz[0], pos_xyz[1], pos_xyz[2]])
         if leg_index == 0:
-            self.front_left.append(xz)
+            self.front_left.append(xyz)
         elif leg_index == 1:
-            self.front_right.append(xz)
+            self.front_right.append(xyz)
 
     def simulator(self):
 
         ####################### Begin ############################
-        xstance, zstance, xswing, zswing = self.gait_planner.trot_begin()
+        xstance, ystance, zstance, xswing, yswing, zswing = self.gait_planner.trot_begin()
         n=min(len(xswing),len(xstance))
 
         for phase in range(n):
@@ -50,7 +49,7 @@ class GaitSimulator:
             loop_time = time.time()
 
             for leg_index in self.config.leg_pairs[0, :]:
-                positions_legpair0 = np.array([xstance[phase], 0, zstance[phase]])
+                positions_legpair0 = np.array([xstance[phase], ystance[phase], zstance[phase]])
                 current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -58,7 +57,7 @@ class GaitSimulator:
                     self.record_point(leg_index, positions_legpair0)
 
             for leg_index in self.config.leg_pairs[1, :]:
-               positions_legpair1 = np.array([xswing[phase], 0, zswing[phase]])
+               positions_legpair1 = np.array([xswing[phase], yswing[phase], zswing[phase]])
                current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -69,59 +68,69 @@ class GaitSimulator:
 
         #################### Cycle ########################
 
-        iter = 0
         cycle_start = time.time()
+        iter = 0
 
         while 5 > time.time()-cycle_start:
             loop_time = time.time()
 
             if self.state.firstIt:
-                x0, z0, x1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+                x0, y0, z0, x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
                 lengthx0 = len(x0)
                 lengthx1 = len(x1)
 
-            elif abs(self.state.velocity- self.command.velocity) > 0.001:
+            elif abs(self.state.velocityX- self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
 
-                progress_pair0 = 1.0 - (self.state.legpair_phases_remaining[0] / lengthx0)
-                progress_pair1 = 1.0 - (self.state.legpair_phases_remaining[1] / lengthx1)
+                vel_change_x = self.command.velocityX - self.state.velocityX
+                vel_change_y = self.command.velocityY - self.state.velocityY
+                vel_change_magnitude = np.sqrt(vel_change_x ** 2 + vel_change_y ** 2)
+
+                max_step = 0.01 / self.config.frequency
+
+                # Limit the velocity change per iteration
+                if vel_change_magnitude > max_step:
+                    scale = max_step / vel_change_magnitude
+                    self.state.velocityX = self.state.velocityX + vel_change_x * scale
+                    self.state.velocityY = self.state.velocityY + vel_change_y * scale
+                else:
+                    self.state.velocityX = self.command.velocityX
+                    self.state.velocityY = self.command.velocityY
 
                 if self.state.leg_pair_in_swing[0]:
-                    x0, z0 = self.gait_planner.swing_planner.discretizer()
-                    zero_index = np.ceil(progress_pair0 * lengthx0)
+                    x0, y0, z0 = self.gait_planner.swing_planner.discretizer()
                     lengthx0 = len(x0)
-                    self.state.legpair_phases_remaining[0] = lengthx0 - zero_index
                 else:
                     n = self.state.legpair_phases_remaining[0]
-                    currentX0 = self.state.foot_locations[0,0]
-                    x0, z0 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX0,n)
+                    currentX0 = self.state.foot_locations[0, 0]
+                    currentY0 = self.state.foot_locations[1, 0]
+                    x0, y0, z0 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX0,currentY0,n)
+                    x0, y0, z0 = x0[1:], y0[1:], z0[1:]
                     lengthx0 = len(x0)
                     self.state.legpair_phases_remaining[0] = lengthx0
 
                 if self.state.leg_pair_in_swing[1]:
-                    x1, z1 = self.gait_planner.swing_planner.discretizer()
-                    one_index = np.ceil(progress_pair1 * lengthx1)
+                    x1, y1, z1 = self.gait_planner.swing_planner.discretizer()
                     lengthx1 = len(x1)
-                    self.state.legpair_phases_remaining[1] = lengthx1 - one_index
                 else:
                     n = self.state.legpair_phases_remaining[1]
-                    currentX1 = self.state.foot_locations[0,1]
-                    x1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1,n)
+                    currentX1 = self.state.foot_locations[0, 1]
+                    currentY1 = self.state.foot_locations[1, 1]
+                    x1, y1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1, currentY1,n)
+                    x1, y1, z1 = x1[1:], y1[1:], z1[1:]
                     lengthx1 = len(x1)
                     self.state.legpair_phases_remaining[1] = lengthx1
 
 
-                self.state.velocity = self.command.velocity
-
             if self.state.legpair_phases_remaining[0] == 0:
-                x0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+                x0, y0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
                 lengthx0 = len(x0)
 
             if self.state.legpair_phases_remaining[1] == 0:
-                x1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
+                x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
                 lengthx1 = len(x1)
 
             for leg_index in self.config.leg_pairs[0, :]:
-                positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]], 0, z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+                positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]], y0[lengthx0 - self.state.legpair_phases_remaining[0]], z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
                 current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -129,7 +138,7 @@ class GaitSimulator:
                     self.record_point(leg_index, positions_legpair0)
 
             for leg_index in self.config.leg_pairs[1, :]:
-                positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]], 0, z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+                positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]], y1[lengthx1 - self.state.legpair_phases_remaining[1]], z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
                 current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -138,6 +147,12 @@ class GaitSimulator:
 
             self.state.legpair_phases_remaining[0] -= 1
             self.state.legpair_phases_remaining[1] -= 1
+
+            if iter==200 or iter == 400:
+                self.command.L3[1] += 2
+            if iter%1 == 0:
+                self.command.L3[1] -= 0.01
+            iter+=1
 
             time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 
@@ -150,92 +165,148 @@ fl = np.asarray(fl)
 fr = np.asarray(fr)
 
 def test_swing_planner_animated():
-
     config = RobotConfig()
 
-    fl_x = fl[:,0]
-    fl_z = fl[:,1]
-    fr_x = fr[:,0]
-    fr_z = fr[:,1]
+    fl_x = fl[:, 0]
+    fl_y = fl[:, 1]
+    fl_z = fl[:, 2]
+    fr_x = fr[:, 0]
+    fr_y = fr[:, 1]
+    fr_z = fr[:, 2]
 
-    # Create figure with two subplots side by side
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+    # Create figure with 2x2 grid: Left leg on left, Right leg on right
+    # Top row: XZ view, Bottom row: XY view
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-    # Set up the left plot (Front Left)
-    x_margin = (max(fl_x) - min(fl_x)) * 0.1
-    z_margin = (max(fl_z) - min(fl_z)) * 0.1
-    ax1.set_xlim(min(fl_x) - x_margin, max(fl_x) + x_margin)
-    ax1.set_ylim(min(fl_z) - z_margin, max(fl_z) + z_margin)
-    ax1.set_ylabel('Z Position (m)', fontsize=12)
-    ax1.set_title(f'Front Left Leg Trajectory', fontsize=14)
-    ax1.grid(True, alpha=0.3)
-    ax1.set_aspect('equal')
+    # Front Left XZ (top left)
+    ax_fl_xz = axes[0, 0]
+    x_margin = (max(fl_x) - min(fl_x)) * 0.1 if max(fl_x) != min(fl_x) else 0.1
+    z_margin = (max(fl_z) - min(fl_z)) * 0.1 if max(fl_z) != min(fl_z) else 0.1
+    ax_fl_xz.set_xlim(min(fl_x) - x_margin, max(fl_x) + x_margin)
+    ax_fl_xz.set_ylim(min(fl_z) - z_margin, max(fl_z) + z_margin)
+    ax_fl_xz.set_ylabel('Z Position (m)', fontsize=12)
+    ax_fl_xz.set_title('Front Left - XZ Plane', fontsize=14)
+    ax_fl_xz.grid(True, alpha=0.3)
+    ax_fl_xz.set_aspect('equal')
 
-    # Set up the right plot (Front Right)
-    x_margin = (max(fr_x) - min(fr_x)) * 0.1
-    z_margin = (max(fr_z) - min(fr_z)) * 0.1
-    ax2.set_xlim(min(fr_x) - x_margin, max(fr_x) + x_margin)
-    ax2.set_ylim(min(fr_z) - z_margin, max(fr_z) + z_margin)
-    ax2.set_xlabel('X Position (m)', fontsize=12)
-    ax2.set_ylabel('Z Position (m)', fontsize=12)
-    ax2.set_title(f'Front Right Leg Trajectory', fontsize=14)
-    ax2.grid(True, alpha=0.3)
-    ax2.set_aspect('equal')
+    # Front Left XY (bottom left)
+    ax_fl_xy = axes[1, 0]
+    x_margin = (max(fl_x) - min(fl_x)) * 0.1 if max(fl_x) != min(fl_x) else 0.1
+    y_margin = (max(fl_y) - min(fl_y)) * 0.1 if max(fl_y) != min(fl_y) else 0.1
+    ax_fl_xy.set_xlim(min(fl_x) - x_margin, max(fl_x) + x_margin)
+    ax_fl_xy.set_ylim(min(fl_y) - y_margin, max(fl_y) + y_margin)
+    ax_fl_xy.set_xlabel('X Position (m)', fontsize=12)
+    ax_fl_xy.set_ylabel('Y Position (m)', fontsize=12)
+    ax_fl_xy.set_title('Front Left - XY Plane', fontsize=14)
+    ax_fl_xy.grid(True, alpha=0.3)
+    ax_fl_xy.set_aspect('equal')
 
-    # Create plot elements for left leg
-    line_l, = ax1.plot([], [], 'b-', linewidth=2, alpha=0.5, label='Trajectory')
-    points_l, = ax1.plot([], [], 'b.', markersize=4, alpha=0.3)
-    current_l, = ax1.plot([], [], 'ro', markersize=10, label='Current', zorder=5)
-    ax1.legend(loc='best')
+    # Front Right XZ (top right)
+    ax_fr_xz = axes[0, 1]
+    x_margin = (max(fr_x) - min(fr_x)) * 0.1 if max(fr_x) != min(fr_x) else 0.1
+    z_margin = (max(fr_z) - min(fr_z)) * 0.1 if max(fr_z) != min(fr_z) else 0.1
+    ax_fr_xz.set_xlim(min(fr_x) - x_margin, max(fr_x) + x_margin)
+    ax_fr_xz.set_ylim(min(fr_z) - z_margin, max(fr_z) + z_margin)
+    ax_fr_xz.set_title('Front Right - XZ Plane', fontsize=14)
+    ax_fr_xz.grid(True, alpha=0.3)
+    ax_fr_xz.set_aspect('equal')
 
-    # Create plot elements for right leg
-    line_r, = ax2.plot([], [], 'r-', linewidth=2, alpha=0.5, label='Trajectory')
-    points_r, = ax2.plot([], [], 'r.', markersize=4, alpha=0.3)
-    current_r, = ax2.plot([], [], 'bo', markersize=10, label='Current', zorder=5)
-    ax2.legend(loc='best')
+    # Front Right XY (bottom right)
+    ax_fr_xy = axes[1, 1]
+    x_margin = (max(fr_x) - min(fr_x)) * 0.1 if max(fr_x) != min(fr_x) else 0.1
+    y_margin = (max(fr_y) - min(fr_y)) * 0.1 if max(fr_y) != min(fr_y) else 0.1
+    ax_fr_xy.set_xlim(min(fr_x) - x_margin, max(fr_x) + x_margin)
+    ax_fr_xy.set_ylim(min(fr_y) - y_margin, max(fr_y) + y_margin)
+    ax_fr_xy.set_xlabel('X Position (m)', fontsize=12)
+    ax_fr_xy.set_title('Front Right - XY Plane', fontsize=14)
+    ax_fr_xy.grid(True, alpha=0.3)
+    ax_fr_xy.set_aspect('equal')
+
+    # Create plot elements for Front Left XZ
+    line_fl_xz, = ax_fl_xz.plot([], [], 'b-', linewidth=2, alpha=0.5, label='Trajectory')
+    points_fl_xz, = ax_fl_xz.plot([], [], 'b.', markersize=4, alpha=0.3)
+    current_fl_xz, = ax_fl_xz.plot([], [], 'ro', markersize=10, label='Current', zorder=5)
+    ax_fl_xz.legend(loc='best')
+
+    # Create plot elements for Front Left XY
+    line_fl_xy, = ax_fl_xy.plot([], [], 'b-', linewidth=2, alpha=0.5, label='Trajectory')
+    points_fl_xy, = ax_fl_xy.plot([], [], 'b.', markersize=4, alpha=0.3)
+    current_fl_xy, = ax_fl_xy.plot([], [], 'ro', markersize=10, label='Current', zorder=5)
+    ax_fl_xy.legend(loc='best')
+
+    # Create plot elements for Front Right XZ
+    line_fr_xz, = ax_fr_xz.plot([], [], 'r-', linewidth=2, alpha=0.5, label='Trajectory')
+    points_fr_xz, = ax_fr_xz.plot([], [], 'r.', markersize=4, alpha=0.3)
+    current_fr_xz, = ax_fr_xz.plot([], [], 'bo', markersize=10, label='Current', zorder=5)
+    ax_fr_xz.legend(loc='best')
+
+    # Create plot elements for Front Right XY
+    line_fr_xy, = ax_fr_xy.plot([], [], 'r-', linewidth=2, alpha=0.5, label='Trajectory')
+    points_fr_xy, = ax_fr_xy.plot([], [], 'r.', markersize=4, alpha=0.3)
+    current_fr_xy, = ax_fr_xy.plot([], [], 'bo', markersize=10, label='Current', zorder=5)
+    ax_fr_xy.legend(loc='best')
 
     # Animation initialization function
     def init():
-        line_l.set_data([], [])
-        points_l.set_data([], [])
-        current_l.set_data([], [])
-        line_r.set_data([], [])
-        points_r.set_data([], [])
-        current_r.set_data([], [])
-        return line_l, points_l, current_l, line_r, points_r, current_r
+        line_fl_xz.set_data([], [])
+        points_fl_xz.set_data([], [])
+        current_fl_xz.set_data([], [])
+        line_fl_xy.set_data([], [])
+        points_fl_xy.set_data([], [])
+        current_fl_xy.set_data([], [])
+        line_fr_xz.set_data([], [])
+        points_fr_xz.set_data([], [])
+        current_fr_xz.set_data([], [])
+        line_fr_xy.set_data([], [])
+        points_fr_xy.set_data([], [])
+        current_fr_xy.set_data([], [])
+        return (line_fl_xz, points_fl_xz, current_fl_xz, line_fl_xy, points_fl_xy, current_fl_xy,
+                line_fr_xz, points_fr_xz, current_fr_xz, line_fr_xy, points_fr_xy, current_fr_xy)
 
     # Animation update function
     def update(frame):
-        # Update left leg
-        line_l.set_data(fl_x[:frame+1], fl_z[:frame+1])
-        points_l.set_data(fl_x[:frame+1], fl_z[:frame+1])
-        current_l.set_data([fl_x[frame]], [fl_z[frame]])
+        TAIL = max(0, frame - 150)
 
-        # Update right leg
-        line_r.set_data(fr_x[:frame+1], fr_z[:frame+1])
-        points_r.set_data(fr_x[:frame+1], fr_z[:frame+1])
-        current_r.set_data([fr_x[frame]], [fr_z[frame]])
+        # Update Front Left XZ
+        line_fl_xz.set_data(fl_x[TAIL:frame + 1], fl_z[TAIL:frame + 1])
+        points_fl_xz.set_data(fl_x[TAIL:frame + 1], fl_z[TAIL:frame + 1])
+        current_fl_xz.set_data([fl_x[frame]], [fl_z[frame]])
 
-        return line_l, points_l, current_l, line_r, points_r, current_r
+        # Update Front Left XY
+        line_fl_xy.set_data(fl_x[TAIL:frame + 1], fl_y[TAIL:frame + 1])
+        points_fl_xy.set_data(fl_x[TAIL:frame + 1], fl_y[TAIL:frame + 1])
+        current_fl_xy.set_data([fl_x[frame]], [fl_y[frame]])
 
-    # Create animation (using the minimum length in case arrays differ)
+        # Update Front Right XZ
+        line_fr_xz.set_data(fr_x[TAIL:frame + 1], fr_z[TAIL:frame + 1])
+        points_fr_xz.set_data(fr_x[TAIL:frame + 1], fr_z[TAIL:frame + 1])
+        current_fr_xz.set_data([fr_x[frame]], [fr_z[frame]])
+
+        # Update Front Right XY
+        line_fr_xy.set_data(fr_x[TAIL:frame + 1], fr_y[TAIL:frame + 1])
+        points_fr_xy.set_data(fr_x[TAIL:frame + 1], fr_y[TAIL:frame + 1])
+        current_fr_xy.set_data([fr_x[frame]], [fr_y[frame]])
+
+        return (line_fl_xz, points_fl_xz, current_fl_xz, line_fl_xy, points_fl_xy, current_fl_xy,
+                line_fr_xz, points_fr_xz, current_fr_xz, line_fr_xy, points_fr_xy, current_fr_xy)
+
+    # Create animation
     num_frames = min(len(fl_x), len(fr_x))
     anim = FuncAnimation(fig, update, init_func=init, frames=num_frames,
-                         interval=5, blit=False, repeat=True)
+                         interval=0.1, blit=False, repeat=True)
 
     plt.tight_layout()
     plt.show()
-
     return fl_x, fl_z, fr_x, fr_z, anim
 
 def plot_front_leg_joint_angles():
     cfg = RobotConfig()
 
     # --- helper: IK over one leg's (x,z) trajectory ---
-    def ik_over_traj(xz: np.ndarray, leg_index: int, offset) -> np.ndarray:
+    def ik_over_traj(xyz: np.ndarray, leg_index: int, offset) -> np.ndarray:
         qs = []
-        for x, z in xz:
-            qs.append(inverse_kinematics(np.array([x, offset, z]), leg_index, cfg))
+        for x, y, z in xyz:
+            qs.append(inverse_kinematics(np.array([x, y+offset, z]), leg_index, cfg))
         return np.asarray(qs)
 
     # Inverse kinematics for front left (leg 0) and front right (leg 1)
@@ -319,5 +390,102 @@ def plot_front_leg_joint_angles():
     plt.show()
 
 
-#plot_front_leg_joint_angles()
-test_swing_planner_animated()
+def animate_foot_3d(foot_data, foot_name='Front Left'):
+    """
+    Create a 3D animation of foot trajectory with moving camera.
+
+    Parameters:
+    -----------
+    foot_data : np.ndarray
+        Array of shape (N, 3) containing [x, y, z] positions
+    foot_name : str
+        Name of the foot for the title ('Front Left' or 'Front Right')
+    """
+    from mpl_toolkits.mplot3d import Axes3D
+
+    x = foot_data[:, 0]
+    y = foot_data[:, 1]
+    z = foot_data[:, 2]
+
+    fig = plt.figure(figsize=(12, 9))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Set axis limits with margins
+    x_margin = (max(x) - min(x)) * 0.2 if max(x) != min(x) else 0.1
+    y_margin = (max(y) - min(y)) * 0.2 if max(y) != min(y) else 0.1
+    z_margin = (max(z) - min(z)) * 0.2 if max(z) != min(z) else 0.1
+
+    ax.set_xlim(min(x) - x_margin, max(x) + x_margin)
+    ax.set_ylim(min(y) - y_margin, max(y) + y_margin)
+    ax.set_zlim(min(z) - z_margin, max(z) + z_margin)
+
+    ax.set_xlabel('X Position (m)', fontsize=11)
+    ax.set_ylabel('Y Position (m)', fontsize=11)
+    ax.set_zlabel('Z Position (m)', fontsize=11)
+    ax.set_title(f'{foot_name} - 3D Trajectory', fontsize=14, pad=20)
+
+    # Color based on foot
+    color = 'tab:blue' if 'Left' in foot_name else 'tab:red'
+
+    # Create plot elements
+    trail_line, = ax.plot([], [], [], color=color, linewidth=2, alpha=0.6, label='Trail')
+    full_traj, = ax.plot(x, y, z, color=color, linewidth=0.5, alpha=0.15, label='Full Path')
+    current_point, = ax.plot([], [], [], 'o', color='yellow', markersize=12,
+                             markeredgecolor='black', markeredgewidth=2, label='Current', zorder=10)
+
+    # Add ground plane for reference
+    if min(z) < 0:
+        xx, yy = np.meshgrid(
+            np.linspace(min(x) - x_margin, max(x) + x_margin, 10),
+            np.linspace(min(y) - y_margin, max(y) + y_margin, 10)
+        )
+        zz = np.zeros_like(xx)
+        ax.plot_surface(xx, yy, zz, alpha=0.1, color='gray')
+
+    ax.legend(loc='upper left')
+    ax.grid(True, alpha=0.3)
+
+    # Initial camera position
+    initial_elev = 20
+    initial_azim = 45
+
+    def init():
+        trail_line.set_data([], [])
+        trail_line.set_3d_properties([])
+        current_point.set_data([], [])
+        current_point.set_3d_properties([])
+        ax.view_init(elev=initial_elev, azim=initial_azim)
+        return trail_line, current_point
+
+    def update(frame):
+        TAIL = max(0, frame - 80)
+
+        # Update trail
+        trail_line.set_data(x[TAIL:frame + 1], y[TAIL:frame + 1])
+        trail_line.set_3d_properties(z[TAIL:frame + 1])
+
+        # Update current point
+        current_point.set_data([x[frame]], [y[frame]])
+        current_point.set_3d_properties([z[frame]])
+
+        # Smooth camera rotation: oscillate azimuth, slowly change elevation
+        progress = frame / len(x)
+        azim = initial_azim + 60 * np.sin(2 * np.pi * progress * 2)  # 2 full rotations
+        elev = initial_elev + 10 * np.sin(2 * np.pi * progress)  # Gentle up-down
+
+        ax.view_init(elev=elev, azim=azim)
+
+        return trail_line, current_point
+
+    num_frames = len(x)
+    anim = FuncAnimation(fig, update, init_func=init, frames=num_frames,
+                         interval=1, blit=False, repeat=True)
+
+    plt.tight_layout()
+    plt.show()
+
+    return anim
+
+plot_front_leg_joint_angles()
+#test_swing_planner_animated()
+#animate_foot_3d(fr, 'Front Right')
