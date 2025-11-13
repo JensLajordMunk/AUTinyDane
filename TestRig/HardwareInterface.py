@@ -14,13 +14,13 @@ class HardwareInterface:
 
         # The following line is a fix for raspberrypi4 // GPIO PINS 3 AND 2
         self.board = types.SimpleNamespace(SCL=3, SDA=2)
-        i2c = busio.I2C(self.board.SCL, self.board.SDA)
+        self.i2c = busio.I2C(self.board.SCL, self.board.SDA)
         self.pca0 = PCA9685(self.i2c, address=0x40)
         self.pca0.frequency = self.pwm_params.freq
         #self.pca1 = PCA9685(self.i2c, address=0x41)
         #self.pca1.frequency = self.pwm_params.freq
-        self.pca2 = PCA9685(self.i2c, address=0x42)
-        self.pca2.frequency = self.pwm_params.freq
+        #self.pca2 = PCA9685(self.i2c, address=0x42)
+        #self.pca2.frequency = self.pwm_params.freq
 
         self.channels = [0, 1, 2]
 
