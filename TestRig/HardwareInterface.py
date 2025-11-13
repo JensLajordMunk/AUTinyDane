@@ -3,13 +3,16 @@ import board
 import busio
 from adafruit_pca9685 import PCA9685
 from Configuration import PWMParams, ServoParams
+# Only needed for raspberrypi 4
+import types
 
 class HardwareInterface:
     def __init__(self):
         self.pwm_params = PWMParams()
         self.servo_params = ServoParams()
-
-        self.i2c = busio.I2C(board.SCL, board.SDA)
+        # Use the next line fr raspberrypi4 and not for pi5 // GPIO PIN 2 AND 3
+        self.board = types.SimpleNamespace(SCL=3, SDA=2)
+        self.i2c = busio.I2C(self.board.SCL, self.board.SDA)
         self.pca = PCA9685(self.i2c, address=0x40)
         self.pca.frequency = self.pwm_params.freq
 
