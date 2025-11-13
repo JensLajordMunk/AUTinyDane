@@ -11,10 +11,12 @@ class Command:
 
         # -------------- Controller parameters ----------------
 
-
-        #self.yaw_rate = self.config.max_yaw_rate * self.L3[1]
-        #self.pitch = self.config.max_pitch * self.R3[0]
-        #self.roll = self.config.max_roll* self.R3[1]
+        self.yaw_array = []
+        self.pitch_array = []
+        self.roll_array = []
+        self.stand_yaw = self.config.max_yaw_rate * self.L3[1]
+        self.stand_pitch = self.config.max_pitch * self.R3[0]
+        self.stand_roll = self.config.max_roll* self.R3[1]
 
     @property
     def velocityX(self):
