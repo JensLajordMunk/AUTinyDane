@@ -29,7 +29,7 @@ class StandRotaionPlanner:
         return state
 
     def run_rotation(self):
-        self.state.yaw_stand = self.changeCheck(self.command.yaw_stand, self.state.yaw_stand)
-        self.state.pitch_stand = self.changeCheck(self.command.pitch_stand, self.state.pitch_stand)
-        self.state.roll_stand = self.changeCheck(self.command.roll_stand, self.state.roll_stand)
+        #self.state.yaw_stand = self.changeCheck(self.command.yaw_stand, self.state.yaw_stand)
+        #self.state.pitch_stand = self.changeCheck(self.command.pitch_stand, self.state.pitch_stand)
+        #self.state.roll_stand = self.changeCheck(self.command.roll_stand, self.state.roll_stand)
 
