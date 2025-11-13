@@ -2,10 +2,11 @@ from SwingPlanner import SwingPlanner
 from StancePlanner import StancePlanner
 from HardwareInterface import HardwareInterface
 from Kinematics import inverse_kinematics
+from Command import Command
 import numpy as np
 import time
 
-class GaitPlanner():
+class GaitPlanner:
 
     def __init__(self, config, state):
         self.config = config
@@ -13,6 +14,7 @@ class GaitPlanner():
         self.hardware_interface = HardwareInterface()
         self.stance_planner = StancePlanner(self.state,self.config)
         self.swing_planner = SwingPlanner(self.state, self.config)
+        self.command = Command(self.config)
 
     def trot_begin(self):
         velocityX = self.state.velocityX
@@ -44,7 +46,7 @@ class GaitPlanner():
         return xstance, ystance, zstance, xswing, yswing, zswing
 
 
-    def trot(self, InSwing, pair_index):
+    def trot(self, pair_index):
 
 
         if self.state.firstIt:
@@ -77,35 +79,108 @@ class GaitPlanner():
                 return xstance, ystance, zstance
 
 
+    def trot_begin_actuated(self):
+        xstance, ystance, zstance, xswing, yswing, zswing = self.trot_begin()
+        n=min(len(xswing),len(xstance))
 
-    def trot_end(self):
+        for phase in range(n):
 
-        initial_angles = state.joint_angles.copy() * np.pi / 180
+            loop_time = time.time()
 
-        target_angles = np.array[np.transpose(inverse_kinematics(np.array([0, 0, -self.config.body_height]), 0, self.config)),
-                                 np.transpose(inverse_kinematics(np.array([0, 0, -self.config.body_height]), 1, self.config)),
-                                 np.transpose(inverse_kinematics(np.array([0, 0, -self.config.body_height]), 2, self.config)),
-                                 np.transpose(inverse_kinematics(np.array([0, 0, -self.config.body_height]), 3, self.config))]
-
-        start_time = time.time()
-        loop_time = 0.0
-        duration = 0.75
-
-        for i in range(phases + 1):
-            loop_time = time.time() - (start_time + loop_time)
-
-            elapsed_time = time.time() - start_time
-            progress = np.clip(elapsed_time / duration, 0, 1)
-            smoothed_progress = 6 * progress ** 5 - 15 * progress ** 4 + 10 * progress ** 3
-            current_angles_rad = initial_angles + (target_angles - initial_angles) * smoothed_progress
-
-            for leg_index in range(4):
+            for leg_index in self.config.leg_pairs[0, :]:
+                positions_legpair0 = np.array([xstance[phase], ystance[phase], zstance[phase]])
+                current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
-                    self.hardware_interface.set_actuator_position(current_angles_rad[motor_index,leg_index], leg_index, motor_index)
+                    self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                    self.state.foot_locations[motor_index,leg_index] = positions_legpair0[motor_index]
 
-            time.sleep(time_per_phase-loop_time)
+            for leg_index in self.config.leg_pairs[1, :]:
+               positions_legpair1 = np.array([xswing[phase], yswing[phase], zswing[phase]])
+               current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
+               for motor_index in range(3):
+                    self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                    self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
+
+            time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 
 
+    def trot_cycle_actuated(self):
+        if self.state.firstIt:
+            x0, y0, z0, x1, y1, z1 = self.trot(self.state.leg_pair_in_swing[0], 0)
+            lengthx0 = len(x0)
+            lengthx1 = len(x1)
+
+        elif abs(self.state.velocityX - self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
+
+            vel_change_x = self.command.velocityX - self.state.velocityX
+            vel_change_y = self.command.velocityY - self.state.velocityY
+            vel_change_magnitude = np.sqrt(vel_change_x ** 2 + vel_change_y ** 2)
+
+            max_step = 0.01 / self.config.frequency
+
+            # Limit the velocity change per iteration
+            if vel_change_magnitude > max_step:
+                scale = max_step / vel_change_magnitude
+                self.state.velocityX = self.state.velocityX + vel_change_x * scale
+                self.state.velocityY = self.state.velocityY + vel_change_y * scale
+            else:
+                self.state.velocityX = self.command.velocityX
+                self.state.velocityY = self.command.velocityY
+
+            if self.state.leg_pair_in_swing[0]:
+                x0, y0, z0 = self.swing_planner.discretizer()
+                lengthx0 = len(x0)
+            else:
+                n = self.state.legpair_phases_remaining[0]
+                currentX0 = self.state.foot_locations[0, 0]
+                currentY0 = self.state.foot_locations[1, 0]
+                x0, y0, z0 = self.stance_planner.linear_discretizer_manual(currentX0, currentY0, n)
+                x0, y0, z0 = x0[1:], y0[1:], z0[1:]
+                lengthx0 = len(x0)
+                self.state.legpair_phases_remaining[0] = lengthx0
+
+            if self.state.leg_pair_in_swing[1]:
+                x1, y1, z1 = self.gait_planner.swing_planner.discretizer()
+                lengthx1 = len(x1)
+            else:
+                n = self.state.legpair_phases_remaining[1]
+                currentX1 = self.state.foot_locations[0, 1]
+                currentY1 = self.state.foot_locations[1, 1]
+                x1, y1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1, currentY1, n)
+                x1, y1, z1 = x1[1:], y1[1:], z1[1:]
+                lengthx1 = len(x1)
+                self.state.legpair_phases_remaining[1] = lengthx1
+
+        if self.state.legpair_phases_remaining[0] == 0:
+            x0, y0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+            lengthx0 = len(x0)
+
+        if self.state.legpair_phases_remaining[1] == 0:
+            x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
+            lengthx1 = len(x1)
+
+        for leg_index in self.config.leg_pairs[0, :]:
+            positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                           y0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                           z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+            current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
+            for motor_index in range(3):
+                self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                self.state.foot_locations[motor_index, leg_index] = positions_legpair0[motor_index]
+                self.record_point(leg_index, positions_legpair0)
+
+        for leg_index in self.config.leg_pairs[1, :]:
+            positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                           y1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                           z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+            current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
+            for motor_index in range(3):
+                self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
+                self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
+                self.record_point(leg_index, positions_legpair1)
+
+        self.state.legpair_phases_remaining[0] -= 1
+        self.state.legpair_phases_remaining[1] -= 1
 
 
 

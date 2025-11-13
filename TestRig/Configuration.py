@@ -57,7 +57,7 @@ class RobotConfig:
         self.stancetime = 2
         self.swingtime = self.stancetime / 3  # semi trot gait pattern
         self.step_height = 0.05
-        self.frequency = 100
+        self.frequency = 75
         self.leg_pairs = np.array([[0, 2], [1, 3]])
 
 

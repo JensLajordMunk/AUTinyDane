@@ -75,7 +75,7 @@ class GaitSimulator:
             loop_time = time.time()
 
             if self.state.firstIt:
-                x0, y0, z0, x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+                x0, y0, z0, x1, y1, z1 = self.gait_planner.trot(0)
                 lengthx0 = len(x0)
                 lengthx1 = len(x1)
 
@@ -122,11 +122,11 @@ class GaitSimulator:
 
 
             if self.state.legpair_phases_remaining[0] == 0:
-                x0, y0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+                x0, y0, z0 = self.gait_planner.trot(0)
                 lengthx0 = len(x0)
 
             if self.state.legpair_phases_remaining[1] == 0:
-                x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
+                x1, y1, z1 = self.gait_planner.trot(1)
                 lengthx1 = len(x1)
 
             for leg_index in self.config.leg_pairs[0, :]:

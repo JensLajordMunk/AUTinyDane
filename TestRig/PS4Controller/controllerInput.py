@@ -2,7 +2,7 @@ from .DogController import DogController
 from threading import Thread
 
 
-def controller_listen(command_config, debug = True):
+def controller_listen(command_config, debug = False):
     # Define controller from DogController
     controller = DogController(
         command_config, interface="/dev/input/js0", connecting_using_ds4drv=False
