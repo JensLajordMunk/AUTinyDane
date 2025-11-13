@@ -43,7 +43,7 @@ class StandRotaionPlanner:
 
         for motor_index in range(3):
             for leg_index in range(4):
-                pos = complete_kinematics([0, 0, -self.config.body_height], self.state.stand_yaw, self.state.pitch_yaw, self.state.roll_yaw, leg_index, self.config)
+                pos = complete_kinematics([0, self.config.abduction_offsets[leg_index], -self.config.body_height], self.state.stand_yaw, self.state.pitch_yaw, self.state.roll_yaw, leg_index, self.config)
                 current_angles_rad = inverse_kinematics(pos,leg_index,self.config)
                 self.hardware_interface.set_actuator_position(current_angles_rad[motor_index,leg_index], leg_index, motor_index)
 
