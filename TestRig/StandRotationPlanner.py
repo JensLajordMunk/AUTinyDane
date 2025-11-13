@@ -6,8 +6,9 @@ import numpy as np
 
 class StandRotaionPlanner:
 
-    def __init__(self, config, state):
+    def __init__(self, config, state, command):
         self.config = config
+        self.command = command
         self.state = state
         self.hardware_interface = HardwareInterface()
         self.command = Command(self.config)

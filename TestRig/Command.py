@@ -14,9 +14,19 @@ class Command:
         self.yaw_array = []
         self.pitch_array = []
         self.roll_array = []
-        self.stand_yaw = self.config.max_yaw_rate * self.L3[1]
-        self.stand_pitch = self.config.max_pitch * self.R3[0]
-        self.stand_roll = self.config.max_roll* self.R3[1]
+        self.mode = []
+
+    @property
+    def stand_yaw(self):
+        return self.config.max_yaw_rate * self.L3[1]
+
+    @property
+    def stand_pitch(self):
+        return self.config.max_pitch * self.R3[0]
+
+    @property
+    def stand_roll(self):
+        return self.config.max_roll* self.R3[1]
 
     @property
     def velocityX(self):
