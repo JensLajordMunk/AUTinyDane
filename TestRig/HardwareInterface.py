@@ -17,10 +17,12 @@ class HardwareInterface:
         self.i2c = busio.I2C(self.board.SCL, self.board.SDA)
         self.pca0 = PCA9685(self.i2c, address=0x40)
         self.pca0.frequency = self.pwm_params.freq
-        #self.pca1 = PCA9685(self.i2c, address=0x41)
-        #self.pca1.frequency = self.pwm_params.freq
-        #self.pca2 = PCA9685(self.i2c, address=0x42)
-        #self.pca2.frequency = self.pwm_params.freq
+        self.pca1 = PCA9685(self.i2c, address=0x41)
+        self.pca1.frequency = self.pwm_params.freq
+        self.pca2 = PCA9685(self.i2c, address=0x42)
+        self.pca2.frequency = self.pwm_params.freq
+        self.pca3 = PCA9685(self.i2c, address=0x43)
+        self.pca3.frequency = self.pwm_params.freq
 
         self.channels = [0, 1, 2]
 
@@ -49,12 +51,12 @@ class HardwareInterface:
         # Sets the duty cycle on the given channel
         if leg_index == 0:
             self.pca0.channels[ch].duty_cycle = duty_cycle
-        #elif leg_index == 1:
-        #    self.pca1.channels[ch].duty_cycle = duty_cycle
         elif leg_index == 1:
+            self.pca1.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 2:
             self.pca2.channels[ch].duty_cycle = duty_cycle
-        #elif leg_index == 3:
-        #    self.pca3.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 3:
+            self.pca3.channels[ch].duty_cycle = duty_cycle
 
     # Used in calibrate_servos.py to calibrate the ServoCalibration.py
     def set_actuator_position0(self, joint_angle, leg_index, motor_index):

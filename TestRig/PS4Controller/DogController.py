@@ -17,6 +17,15 @@ class DogController(Controller):
         super().__init__(**kwargs)
         self.command_config = command_config
 
+    def on_x_press(self):
+        self.command_config.mode = "TROT"
+
+    def on_circle_press(self):
+        self.command_config.mode = "ROTATE"
+
+    def on_square_press(self):
+        self.command_config.mode = "TRANSLATE"
+
     def on_L3_up(self, value):
         self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
 
@@ -69,11 +78,17 @@ class DogController(Controller):
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
+
+
         return
 
     # Map from -1 to 1 for sideways speed
     def map_coordinates_y(self, value):
-        return value / self.MAX_POS
+        mapped_value = value / self.MAX_POS
+        # Primarily for testing // EDGE CASE when velocity is 0
+        if abs(mapped_value) < 0.1:
+            mapped_value = 0.1
+        return mapped_value
 """
     # Return value 1 or -1 for forward and backwards
     @staticmethod
