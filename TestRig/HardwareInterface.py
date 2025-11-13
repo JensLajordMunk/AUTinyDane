@@ -1,15 +1,20 @@
 import numpy as np
-from board import SCL, SDA
+import board
 import busio
 from adafruit_pca9685 import PCA9685
 from Configuration import PWMParams, ServoParams
+# The following line is a fix for raspberrypi4
+import types
+
  
 class HardwareInterface:
     def __init__(self):
         self.pwm_params = PWMParams()
         self.servo_params = ServoParams()
 
-        self.i2c = busio.I2C(SCL, SDA)
+        # The following line is a fix for raspberrypi4 // GPIO PINS 3 AND 2
+        self.board = types.SimpleNamespace(SCL=3, SDA=2)
+        i2c = busio.I2C(self.board.SCL, self.board.SDA)
         self.pca0 = PCA9685(self.i2c, address=0x40)
         self.pca0.frequency = self.pwm_params.freq
         #self.pca1 = PCA9685(self.i2c, address=0x41)
