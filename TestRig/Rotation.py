@@ -38,10 +38,6 @@ def complete_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
     theta_initial = np.arctan(y_global0/x_global0)
 
     # Distance from body center to leg origin
-
-
-
-
     ############ Maybe change to pythagoras? ##########
     r = y_global0 / np.sin(theta_initial)
 
@@ -132,12 +128,3 @@ def complete_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
     z_final = z3
     #thetas = inverse_kinematics([x_final,y_final,z_final], leg_index, configuration)
     return np.array([x_final, y_final, z_final])
-
-def test_complete_kinematics():
-    configuration = RobotConfig()
-    r_abductor_foot = (0, 0.04, -0.1131)
-    leg_index = 2
-    r = complete_kinematics(r_abductor_foot,0,0,10,leg_index,configuration)
-
-    print("Output coordinates (x1, y1, z1):", r)
-#test_complete_kinematics()
