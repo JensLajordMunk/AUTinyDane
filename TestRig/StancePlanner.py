@@ -14,15 +14,25 @@ class StancePlanner:
 
     def linear_discretizer(self):
         n = max(2,int(self.config.stancetime * self.config.frequency))
-        TDX, TDY = self.touchdown_location()
-        x_uni=np.linspace(TDX,-TDX,n)
-        y_uni = np.linspace(TDY, -TDY, n)
-        z_uni=np.zeros(n) -self.config.body_height
+        if self.state.velocityX + self.state.velocityY == 0:
+            x_uni = np.zeros(n)
+            y_uni = np.zeros(n)
+            z_uni = np.zeros(n) - self.config.body_height
+        else:
+            TDX, TDY = self.touchdown_location()
+            x_uni=np.linspace(TDX,-TDX,n)
+            y_uni = np.linspace(TDY, -TDY, n)
+            z_uni=np.zeros(n) -self.config.body_height
         return x_uni, y_uni, z_uni
 
     def linear_discretizer_manual(self, Xbegin, Ybegin,n):
-        TDX, TDY = self.touchdown_location()
-        x_uni = np.linspace(Xbegin,-TDX,n)
-        y_uni = np.linspace(Ybegin, -TDY, n)
-        z_uni=np.zeros(n) -self.config.body_height
+        if self.state.velocityX + self.state.velocityY == 0:
+            x_uni = np.zeros(n)
+            y_uni = np.zeros(n)
+            z_uni = np.zeros(n) - self.config.body_height
+        else:
+            TDX, TDY = self.touchdown_location()
+            x_uni = np.linspace(Xbegin,-TDX,n)
+            y_uni = np.linspace(Ybegin, -TDY, n)
+            z_uni=np.zeros(n) -self.config.body_height
         return x_uni, y_uni, z_uni

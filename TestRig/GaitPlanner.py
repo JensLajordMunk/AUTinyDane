@@ -2,6 +2,7 @@ from SwingPlanner import SwingPlanner
 from StancePlanner import StancePlanner
 from HardwareInterface import HardwareInterface
 from Kinematics import inverse_kinematics
+from Rotation import complete_kinematics
 from Command import Command
 import numpy as np
 import time
@@ -106,10 +107,11 @@ class GaitPlanner:
 
     def trot_cycle_actuated(self):
         if self.state.firstIt:
-            x0, y0, z0, x1, y1, z1 = self.trot(self.state.leg_pair_in_swing[0], 0)
+            x0, y0, z0, x1, y1, z1 = self.trot(0)
             lengthx0 = len(x0)
             lengthx1 = len(x1)
 
+        ################# CHECKING VELOCITY CHANGES IN BOTH DIRECTIONS ######################
         elif abs(self.state.velocityX - self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
 
             vel_change_x = self.command.velocityX - self.state.velocityX
@@ -127,6 +129,7 @@ class GaitPlanner:
                 self.state.velocityX = self.command.velocityX
                 self.state.velocityY = self.command.velocityY
 
+            ########## CHANGING POSITIONS BASED ON NEW VELOCITY ##############
             if self.state.leg_pair_in_swing[0]:
                 x0, y0, z0 = self.swing_planner.discretizer()
                 lengthx0 = len(x0)
@@ -140,45 +143,97 @@ class GaitPlanner:
                 self.state.legpair_phases_remaining[0] = lengthx0
 
             if self.state.leg_pair_in_swing[1]:
-                x1, y1, z1 = self.gait_planner.swing_planner.discretizer()
+                x1, y1, z1 = self.swing_planner.discretizer()
                 lengthx1 = len(x1)
             else:
                 n = self.state.legpair_phases_remaining[1]
                 currentX1 = self.state.foot_locations[0, 1]
                 currentY1 = self.state.foot_locations[1, 1]
-                x1, y1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1, currentY1, n)
+                x1, y1, z1 = self.stance_planner.linear_discretizer_manual(currentX1, currentY1, n)
                 x1, y1, z1 = x1[1:], y1[1:], z1[1:]
                 lengthx1 = len(x1)
                 self.state.legpair_phases_remaining[1] = lengthx1
 
+        ############## CHECKING YAW CHANGE ####################
+        if abs(self.command.trot_yaw-self.state.trot_yaw) > 0.0001 and self.state.leg_pair_in_swing[0] == self.state.leg_pair_in_swing[1]:
+            yaw_change = self.command.trot_yaw-self.state.trot_yaw
+
+            max_step = 0.1 / self.config.frequency
+
+            # Limit the yaw change per iteration
+            if abs(yaw_change) > max_step:
+                scale = max_step / yaw_change
+                self.state.trot_yaw = self.state.trot_yaw + yaw_change * scale
+            else:
+                self.state.trot_yaw = self.command.trot_yaw
+
+        ################# CHECK IF PHASE ENDED ###############3
         if self.state.legpair_phases_remaining[0] == 0:
-            x0, y0, z0 = self.gait_planner.trot(self.state.leg_pair_in_swing[0], 0)
+            x0, y0, z0 = self.trot(0)
             lengthx0 = len(x0)
+            if not self.state.leg_pair_in_swing[1]:
+                self.state.stance_yaw_pair[0] = 0
 
         if self.state.legpair_phases_remaining[1] == 0:
-            x1, y1, z1 = self.gait_planner.trot(self.state.leg_pair_in_swing[1], 1)
+            x1, y1, z1 = self.trot(1)
             lengthx1 = len(x1)
+            if not self.state.leg_pair_in_swing[1]:
+                self.state.stance_yaw_pair[1] = 0
 
+        ####################### ACTUATING THE FIRST LEG PAIR ########################################
+        positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                       y0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                       z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+
+        # Changing yaw progressively
+        if self.state.leg_pair_in_swing[0]:
+            rate_swing = self.config.swingtime * self.config.frequency
+            self.state.stance_yaw_pair[0] -= self.state.trot_yaw/rate_swing
+            minimum = min(0, self.state.trot_yaw)
+            maximum = max(0, self.state.trot_yaw)
+            self.state.stance_yaw_pair[0] = np.clip(self.state.stance_yaw_pair[0], minimum, maximum)
+        else:
+            rate_stance = self.config.stancetime * self.config.frequency
+            self.state.stance_yaw_pair[0] += self.state.trot_yaw/rate_stance
+            minimum = min(0, self.state.trot_yaw)
+            maximum = max(0, self.state.trot_yaw)
+            self.state.stance_yaw_pair[0] = np.clip(self.state.stance_yaw_pair[0], minimum, maximum)
+
+        # actuating next position
         for leg_index in self.config.leg_pairs[0, :]:
-            positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
-                                           y0[lengthx0 - self.state.legpair_phases_remaining[0]],
-                                           z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+            positions_legpair0 = complete_kinematics(positions_legpair0,self.state.stance_yaw_pair[0],0,0,leg_index,self.config)
             current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
             for motor_index in range(3):
                 self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
                 self.state.foot_locations[motor_index, leg_index] = positions_legpair0[motor_index]
-                self.record_point(leg_index, positions_legpair0)
+
+        ####################### ACTUATING THE SECOND LEG PAIR ########################################
+        positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                       y1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                       z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+
+        # Changing yaw progressively
+        if self.state.leg_pair_in_swing[1]:
+            rate_swing = self.config.swingtime * self.config.frequency
+            self.state.stance_yaw_pair[1] -= self.state.trot_yaw/rate_swing
+            minimum = min(0, self.state.trot_yaw)
+            maximum = max(0, self.state.trot_yaw)
+            self.state.stance_yaw_pair[1] = np.clip(self.state.stance_yaw_pair[1], minimum, maximum)
+        else:
+            rate_stance = self.config.stancetime * self.config.frequency
+            self.state.stance_yaw_pair[1] += self.state.trot_yaw/rate_stance
+            minimum = min(0, self.state.trot_yaw)
+            maximum = max(0, self.state.trot_yaw)
+            self.state.stance_yaw_pair[1] = np.clip(self.state.stance_yaw_pair[1], minimum, maximum)
 
         for leg_index in self.config.leg_pairs[1, :]:
-            positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]],
-                                           y1[lengthx1 - self.state.legpair_phases_remaining[1]],
-                                           z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+            positions_legpair1 = complete_kinematics(positions_legpair1, self.state.stance_yaw_pair[1], 0, 0, leg_index, self.config)
             current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
             for motor_index in range(3):
                 self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
                 self.state.foot_locations[motor_index, leg_index] = positions_legpair1[motor_index]
-                self.record_point(leg_index, positions_legpair1)
 
+        ########## PROGRESSING TO NEXT ITERATION ################
         self.state.legpair_phases_remaining[0] -= 1
         self.state.legpair_phases_remaining[1] -= 1
 

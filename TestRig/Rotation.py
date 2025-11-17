@@ -140,4 +140,4 @@ def test_complete_kinematics():
     r = complete_kinematics(r_abductor_foot,0,0,10,leg_index,configuration)
 
     print("Output coordinates (x1, y1, z1):", r)
-test_complete_kinematics()
+#test_complete_kinematics()

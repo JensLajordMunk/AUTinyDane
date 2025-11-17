@@ -6,6 +6,7 @@ from matplotlib.animation import FuncAnimation
 from Configuration import RobotConfig
 from State import State
 from Kinematics import inverse_kinematics
+from Rotation import complete_kinematics
 from Command import Command
 import time
 import sys
@@ -85,7 +86,7 @@ class GaitSimulator:
                 vel_change_y = self.command.velocityY - self.state.velocityY
                 vel_change_magnitude = np.sqrt(vel_change_x ** 2 + vel_change_y ** 2)
 
-                max_step = 0.01 / self.config.frequency
+                max_step = 0.05 / self.config.frequency
 
                 # Limit the velocity change per iteration
                 if vel_change_magnitude > max_step:
@@ -120,25 +121,77 @@ class GaitSimulator:
                     lengthx1 = len(x1)
                     self.state.legpair_phases_remaining[1] = lengthx1
 
+            if abs(self.command.trot_yaw - self.state.trot_yaw) > 0.001 and self.state.leg_pair_in_swing[0] == self.state.leg_pair_in_swing[1]:
+                yaw_change = self.command.trot_yaw - self.state.trot_yaw
+
+                max_step = 10 / self.config.frequency
+
+                # Limit the yaw change per iteration
+                if abs(yaw_change) > max_step:
+                    scale = max_step / yaw_change
+                    self.state.trot_yaw = self.state.trot_yaw + yaw_change * scale
+                else:
+                    self.state.trot_yaw = self.command.trot_yaw
 
             if self.state.legpair_phases_remaining[0] == 0:
                 x0, y0, z0 = self.gait_planner.trot(0)
+                if not self.state.leg_pair_in_swing[0]:
+                    self.state.stance_yaw_pair[0] = 0
                 lengthx0 = len(x0)
 
             if self.state.legpair_phases_remaining[1] == 0:
                 x1, y1, z1 = self.gait_planner.trot(1)
+                if not self.state.leg_pair_in_swing[1]:
+                    self.state.stance_yaw_pair[1] = 0
                 lengthx1 = len(x1)
 
+            positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                           y0[lengthx0 - self.state.legpair_phases_remaining[0]],
+                                           z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+
+            # Changing yaw progressively
+            if self.state.leg_pair_in_swing[0]:
+                rate_swing = self.config.swingtime * self.config.frequency
+                self.state.stance_yaw_pair[0] -= self.state.trot_yaw / rate_swing
+                minimum = min(0, self.state.trot_yaw)
+                maximum = max(0, self.state.trot_yaw)
+                self.state.stance_yaw_pair[0] = np.clip(self.state.stance_yaw_pair[0],minimum,maximum)
+            else:
+                rate_stance = self.config.stancetime * self.config.frequency
+                self.state.stance_yaw_pair[0] += self.state.trot_yaw / rate_stance
+                minimum = min(0, self.state.trot_yaw)
+                maximum = max(0, self.state.trot_yaw)
+                self.state.stance_yaw_pair[0] = np.clip(self.state.stance_yaw_pair[0],minimum,maximum)
+
             for leg_index in self.config.leg_pairs[0, :]:
-                positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]], y0[lengthx0 - self.state.legpair_phases_remaining[0]], z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
+                positions_legpair0 = complete_kinematics(positions_legpair0, self.state.stance_yaw_pair[0], 0, 0, leg_index, self.config)
                 current_angles_rad = inverse_kinematics(positions_legpair0, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
                     self.state.foot_locations[motor_index, leg_index] = positions_legpair0[motor_index]
                     self.record_point(leg_index, positions_legpair0)
 
+
+            positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                           y1[lengthx1 - self.state.legpair_phases_remaining[1]],
+                                           z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+
+            # Changing yaw progressively
+            if self.state.leg_pair_in_swing[1]:
+                rate_swing = self.config.swingtime * self.config.frequency
+                self.state.stance_yaw_pair[1] -= self.state.trot_yaw / rate_swing
+                minimum = min(0, self.state.trot_yaw)
+                maximum = max(0, self.state.trot_yaw)
+                self.state.stance_yaw_pair[1] = np.clip(self.state.stance_yaw_pair[1],minimum,maximum)
+            else:
+                rate_stance = self.config.stancetime * self.config.frequency
+                self.state.stance_yaw_pair[1] += self.state.trot_yaw / rate_stance
+                minimum = min(0, self.state.trot_yaw)
+                maximum = max(0, self.state.trot_yaw)
+                self.state.stance_yaw_pair[1] = np.clip(self.state.stance_yaw_pair[1],minimum,maximum)
+
             for leg_index in self.config.leg_pairs[1, :]:
-                positions_legpair1 = np.array([x1[lengthx1 - self.state.legpair_phases_remaining[1]], y1[lengthx1 - self.state.legpair_phases_remaining[1]], z1[lengthx1 - self.state.legpair_phases_remaining[1]]])
+                positions_legpair1 = complete_kinematics(positions_legpair1, self.state.stance_yaw_pair[1], 0, 0, leg_index, self.config)
                 current_angles_rad = inverse_kinematics(positions_legpair1, leg_index, self.config)
                 for motor_index in range(3):
                     self.hardware_interface.set_actuator_position(current_angles_rad[motor_index], leg_index, motor_index)
@@ -148,12 +201,13 @@ class GaitSimulator:
             self.state.legpair_phases_remaining[0] -= 1
             self.state.legpair_phases_remaining[1] -= 1
 
-            if iter==200 or iter == 400:
-                self.command.L3[1] += 2
-            if iter%1 == 0:
-                self.command.L3[1] -= 0.01
+            #if iter==200 or iter == 400:
+            #    self.command.L3[1] += 2
+            if 0<iter<100:
+                self.command.R3[1] = 1
+            else:
+                self.command.R3[1] = 0
             iter+=1
-
             time.sleep((1.0 / self.config.frequency) - (time.time()-loop_time))
 
         return self.front_left, self.front_right
@@ -165,8 +219,6 @@ fl = np.asarray(fl)
 fr = np.asarray(fr)
 
 def test_swing_planner_animated():
-    config = RobotConfig()
-
     fl_x = fl[:, 0]
     fl_y = fl[:, 1]
     fl_z = fl[:, 2]
@@ -486,6 +538,6 @@ def animate_foot_3d(foot_data, foot_name='Front Left'):
 
     return anim
 
-plot_front_leg_joint_angles()
+#plot_front_leg_joint_angles()
 #test_swing_planner_animated()
-#animate_foot_3d(fr, 'Front Right')
+animate_foot_3d(fr, 'Front Right')
