@@ -1,5 +1,7 @@
+from click import command
 from pyPS4Controller.controller import Controller
 from threading import Lock
+from Command import Modes
 
 
 class DogController(Controller):
@@ -16,6 +18,15 @@ class DogController(Controller):
     def __init__(self, command_config, **kwargs):
         super().__init__(**kwargs)
         self.command_config = command_config
+
+    def on_x_press(self):
+        self.command_config.mode = Modes.TROT
+
+    def on_circle_press(self):
+        self.command_config.mode = Modes.ROTATE
+
+    def on_square_press(self):
+        self.command_config.mode = Modes.TRANSLATE
 
     def on_L3_up(self, value):
         self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
@@ -69,19 +80,10 @@ class DogController(Controller):
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
+
         return
 
     # Map from -1 to 1 for sideways speed
     def map_coordinates_y(self, value):
-        return value / self.MAX_POS
-"""
-    # Return value 1 or -1 for forward and backwards
-    @staticmethod
-    def map_coordinates_x(value):
-        if value > 0:
-            return -1
-        if value < 0:
-            return 1
-        else:
-            return 0
-"""
+        mapped_value = value / self.MAX_POS
+        return mapped_value
