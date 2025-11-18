@@ -20,7 +20,7 @@ class Command:
         self.yaw_array = []
         self.pitch_array = []
         self.roll_array = []
-        self.mode = modes.TROT
+        self.mode = Modes.TROT
 
     @property
     def stand_yaw(self):

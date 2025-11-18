@@ -1,5 +1,7 @@
+from click import command
 from pyPS4Controller.controller import Controller
 from threading import Lock
+from Command import Modes
 
 
 class DogController(Controller):
@@ -21,10 +23,10 @@ class DogController(Controller):
         self.command_config.mode = Modes.TROT
 
     def on_circle_press(self):
-        self.command_config.mode = "ROTATE"
+        self.command_config.mode = Modes.ROTATE
 
     def on_square_press(self):
-        self.command_config.mode = "TRANSLATE"
+        self.command_config.mode = Modes.TRANSLATE
 
     def on_L3_up(self, value):
         self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
