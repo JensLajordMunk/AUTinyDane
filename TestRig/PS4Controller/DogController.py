@@ -81,24 +81,9 @@ class DogController(Controller):
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0
 
-
         return
 
     # Map from -1 to 1 for sideways speed
     def map_coordinates_y(self, value):
         mapped_value = value / self.MAX_POS
-        # Primarily for testing // EDGE CASE when velocity is 0
-        if abs(mapped_value) < 0.1:
-            mapped_value = 0.1
         return mapped_value
-"""
-    # Return value 1 or -1 for forward and backwards
-    @staticmethod
-    def map_coordinates_x(value):
-        if value > 0:
-            return -1
-        if value < 0:
-            return 1
-        else:
-            return 0
-"""

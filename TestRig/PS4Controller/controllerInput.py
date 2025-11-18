@@ -2,7 +2,7 @@ from .DogController import DogController
 from threading import Thread
 
 
-def controller_listen(command_config, debug = False):
+def controller_listen(command_config, debug=False):
     # Define controller from DogController
     controller = DogController(
         command_config, interface="/dev/input/js0", connecting_using_ds4drv=False
@@ -24,7 +24,7 @@ def controller_listen(command_config, debug = False):
     return control_panel
 
 
-def controller_stop(command_config, control_panel, debug=True):
+def controller_stop(command_config, control_panel, debug=False):
     # Stop listening and join thread
     control_panel["controller"].stop = True
     control_panel["thread"].join()
