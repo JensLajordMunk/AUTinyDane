@@ -77,12 +77,12 @@ class HardwareInterface:
         # Sets the duty cycle on the given channel
         if leg_index == 0:
             self.pca0.channels[ch].duty_cycle = duty_cycle
-        #elif leg_index == 1:
-        #    self.pca1.channels[ch].duty_cycle = duty_cycle
         elif leg_index == 1:
+            self.pca1.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 2:
             self.pca2.channels[ch].duty_cycle = duty_cycle
-        #elif leg_index == 3:
-        #    self.pca3.channels[ch].duty_cycle = duty_cycle
+        elif leg_index == 3:
+            self.pca3.channels[ch].duty_cycle = duty_cycle
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 

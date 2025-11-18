@@ -5,7 +5,7 @@ class Command:
         self.config = config
 
         # -------------- Controller input ----------------
-        self.L3 = [1, 1]
+        self.L3 = [0, 0]
         self.R3 = [0, 0]
         self.controller_connected = False
 
@@ -18,7 +18,11 @@ class Command:
 
     @property
     def stand_yaw(self):
-        return self.config.max_yaw_rate * self.L3[1]
+        return self.config.max_yaw_stand * self.R3[1]
+
+    @property
+    def trot_yaw(self):
+        return self.config.max_yaw_rate * self.R3[1]
 
     @property
     def stand_pitch(self):
