@@ -18,7 +18,7 @@ class DogController(Controller):
         self.command_config = command_config
 
     def on_x_press(self):
-        self.command_config.mode = "TROT"
+        self.command_config.mode = Modes.TROT
 
     def on_circle_press(self):
         self.command_config.mode = "ROTATE"
