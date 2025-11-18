@@ -51,7 +51,7 @@ class RobotConfig:
         self.leg_low = 0.09278
         self.body_width = 0.09012
         self.body_length = 0.16993
-        self.body_height = 0.1301
+        self.body_height = 0.1116
 
         # -------------- Gait parameters ----------------
         self.arcR = 0.012
@@ -60,14 +60,14 @@ class RobotConfig:
         self.swingtime = self.stancetime / 3  # semi trot gait pattern
         self.step_height = 0.05
         self.frequency = 30
-        self.leg_pairs = np.array([[0, 2], [1, 3]])
+        self.leg_pairs = np.array([[0, 3], [1, 2]])
 
 
 
         # -------------- Max parameters ----------------
-        self.max_velocityX = 0.1
-        self.max_velocityY = 0.1
-        self.max_yaw_rate =  60*np.pi/180 #rad/s
-        self.max_yaw_stand = 0
-        self.max_pitch = 0
-        self.max_roll = 0
+        self.max_velocityX = 0.05
+        self.max_velocityY = 0.02
+        self.max_yaw_rate =  20 #rad/s
+        self.max_yaw_stand = 20
+        self.max_pitch = 20
+        self.max_roll = 20
