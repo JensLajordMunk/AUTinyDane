@@ -169,6 +169,7 @@ class GaitPlanner:
                 self.state.stance_yaw_pair[1] = 0
 
         ################# CHECKING VELOCITY CHANGES IN BOTH DIRECTIONS ######################
+        """ Gradually changes a high velocity change in steps to ensure stability"""
         if abs(self.state.velocityX - self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
 
             vel_change_x = self.command.velocityX - self.state.velocityX
@@ -187,6 +188,7 @@ class GaitPlanner:
                 self.state.velocityY = self.command.velocityY
 
             ########## CHANGING POSITIONS BASED ON NEW VELOCITY ##############
+            """Recalculates the trajectory with new velocity for each leg pair"""
             if self.state.leg_pair_in_swing[0]:
                 x0, y0, z0 = self.swing_planner.discretizer()
                 lengthx0 = len(x0)
@@ -214,6 +216,7 @@ class GaitPlanner:
                 self.state.legpair_phases_remaining[1] = lengthx1
 
         ############## CHECKING YAW CHANGE ####################
+        """Gradually changes yaw in the same manner as the velocity for stability"""
         if abs(self.command.trot_yaw-self.state.trot_yaw) > 0.0001 and self.state.leg_pair_in_swing[0] == self.state.leg_pair_in_swing[1]:
             yaw_change = self.command.trot_yaw-self.state.trot_yaw
 
@@ -228,6 +231,8 @@ class GaitPlanner:
 
 
         ####################### ACTUATING THE FIRST LEG PAIR ########################################
+        """ Takes the position, changing current yaw as we progress in the trajectory,
+            applies yaw to position, actuating updated position"""
         positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
                                        y0[lengthx0 - self.state.legpair_phases_remaining[0]],
                                        z0[lengthx0 - self.state.legpair_phases_remaining[0]]])
