@@ -27,7 +27,7 @@ class GaitSimulator:
         self.config = RobotConfig()
         self.state = State(self.config)
         self.command = Command(self.config)
-        self.gait_planner = GaitPlanner(self.config, self.state)
+        self.gait_planner = GaitPlanner(self.config, self.state,self.command)
         self.hardware_interface = MockHardwareInterface()
         self.front_right = []
         self.front_left = []
@@ -80,7 +80,19 @@ class GaitSimulator:
                 lengthx0 = len(x0)
                 lengthx1 = len(x1)
 
-            elif abs(self.state.velocityX- self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
+            elif self.state.legpair_phases_remaining[0] == 0:
+                x0, y0, z0 = self.gait_planner.trot(0)
+                if not self.state.leg_pair_in_swing[0]:
+                    self.state.stance_yaw_pair[0] = 0
+                lengthx0 = len(x0)
+
+            elif self.state.legpair_phases_remaining[1] == 0:
+                x1, y1, z1 = self.gait_planner.trot(1)
+                if not self.state.leg_pair_in_swing[1]:
+                    self.state.stance_yaw_pair[1] = 0
+                lengthx1 = len(x1)
+
+            if abs(self.state.velocityX- self.command.velocityX) > 0.0001 or abs(self.state.velocityY - self.command.velocityY) > 0.0001:
 
                 vel_change_x = self.command.velocityX - self.state.velocityX
                 vel_change_y = self.command.velocityY - self.state.velocityY
@@ -105,7 +117,8 @@ class GaitSimulator:
                     currentX0 = self.state.foot_locations[0, 0]
                     currentY0 = self.state.foot_locations[1, 0]
                     x0, y0, z0 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX0,currentY0,n)
-                    x0, y0, z0 = x0[1:], y0[1:], z0[1:]
+                    if n > 1:
+                        x0, y0, z0 = x0[1:], y0[1:], z0[1:]
                     lengthx0 = len(x0)
                     self.state.legpair_phases_remaining[0] = lengthx0
 
@@ -117,7 +130,8 @@ class GaitSimulator:
                     currentX1 = self.state.foot_locations[0, 1]
                     currentY1 = self.state.foot_locations[1, 1]
                     x1, y1, z1 = self.gait_planner.stance_planner.linear_discretizer_manual(currentX1, currentY1,n)
-                    x1, y1, z1 = x1[1:], y1[1:], z1[1:]
+                    if n > 1:
+                        x1, y1, z1 = x1[1:], y1[1:], z1[1:]
                     lengthx1 = len(x1)
                     self.state.legpair_phases_remaining[1] = lengthx1
 
@@ -132,18 +146,6 @@ class GaitSimulator:
                     self.state.trot_yaw = self.state.trot_yaw + yaw_change * scale
                 else:
                     self.state.trot_yaw = self.command.trot_yaw
-
-            if self.state.legpair_phases_remaining[0] == 0:
-                x0, y0, z0 = self.gait_planner.trot(0)
-                if not self.state.leg_pair_in_swing[0]:
-                    self.state.stance_yaw_pair[0] = 0
-                lengthx0 = len(x0)
-
-            if self.state.legpair_phases_remaining[1] == 0:
-                x1, y1, z1 = self.gait_planner.trot(1)
-                if not self.state.leg_pair_in_swing[1]:
-                    self.state.stance_yaw_pair[1] = 0
-                lengthx1 = len(x1)
 
             positions_legpair0 = np.array([x0[lengthx0 - self.state.legpair_phases_remaining[0]],
                                            y0[lengthx0 - self.state.legpair_phases_remaining[0]],
