@@ -1,8 +1,12 @@
 import time
 import board
 import adafruit_mpu6050
+import types
+import busio
 
-i2c = board.I2C()  # This automatically uses I2C bus 1 (SDA=GPIO2, SCL=GPIO3)
+
+brd = types.SimpleNamespace(SCL=11, SDA=10)
+i2c = busio.I2C(brd.SCL, brd.SDA)
 
 mpu = adafruit_mpu6050.MPU6050(i2c)
 
