@@ -7,20 +7,48 @@ class SwingPlanner:
         self.state = state
 
     def touchdown_location(self):
-        # TODO: Define values in Config
+        #################### READ ME ######################
+        """ This i based on Raiberts touchdown location, and calculates how far the
+            foot has drifted backwards during the stance and is placed the same distance
+            forward in the swing phase"""
+
         TDX = self.state.velocityX * self.config.stancetime * 0.5
         TDY = self.state.velocityY * self.config.stancetime * 0.5
         return TDX, TDY # Raibert et al.
 
     def thetaZ(self):
+        #################### READ ME ######################
+        """ This calculates the angle at which the initial arc should end"""
         absVel = np.sqrt( self.state.velocityX**2 + self.state.velocityY**2)
         return np.arctan2(2*(self.config.step_height - 2*self.config.arcR), abs(absVel*self.config.stancetime))
 
     def velAngle(self):
+        #################### READ ME ######################
+        """ This calculates the angle between the two velocities, essential
+            to project the equations correctly"""
         return np.arctan2(self.state.velocityY, self.state.velocityX)
 
     def key_points(self):
         assert self.config.arcR * 2 < self.config.step_height, "The radius is too large compared to the step height"
+
+        #################### READ ME ######################
+        """ This calculates the coordinates for the beginning and end of the straight
+            line. This is ofcourse symmetric so the sign can be changed for the other
+            line:
+            
+            x1: The touchdown location but negative substracted by how far the arc
+            stretches back projected onto the xz plane by the velocity angle
+            
+            x2: This is how far the arc stretches back projected onto xz
+            
+            y1: same logic as x1 but projected onto yz
+            
+            y2: same logic as x1 but projected onto yz
+            
+            z1: calculates the top point of the first arc
+            
+            z2: Takes the stepheigt - radius = center of circle and adds how far up
+            the arc begins"""
 
         TDX, TDY = self.touchdown_location()
         x1 = -TDX - self.config.arcR * np.sin(self.thetaZ()) * round(np.cos(self.velAngle()),10)
@@ -45,12 +73,20 @@ class SwingPlanner:
         return 2 * (self.bottom_arc_length() + self.linear_section_length() + self.half_top_arc_length())
 
     def section_phase_times(self):
+        #################### READ ME ######################
+        """ This calculates the time based on the length of each arc, such
+            that each section gets roughly the same amount of points, giving
+            a somewhat even distribution of point across the swing"""
+
         bottom_arc_time = self.config.swingtime*self.bottom_arc_length()/self.total_swing_length()
         linear_length_time = self.config.swingtime*self.linear_section_length()/self.total_swing_length()
         top_arc_time = self.config.swingtime*2*self.half_top_arc_length()/self.total_swing_length()
         return bottom_arc_time, linear_length_time, top_arc_time
 
     def arc_angles(self):
+        #################### READ ME ######################
+        """ This returns the arc angles for the discretizer"""
+
         angle1_start = -np.pi/2
         angle1_end = np.pi/2 + self.thetaZ()
 
@@ -63,6 +99,11 @@ class SwingPlanner:
         return angle1_start, angle1_end, angle2_start, angle2_end, angle3_start, angle3_end
 
     def f1(self):
+        #################### READ ME ######################
+        """ This can be shortened such that f1 and f2 methods are one.
+            Each gives a discretized version between the starting and end
+            location by parameterizing the vector into a function of one
+            variable and returns the x,y,z"""
         x1, x2, y1, y2, z1, z2 = self.key_points()
         bottom_arc_time, linear_length_time, top_arc_time = self.section_phase_times()
         n = max(2, int(linear_length_time * self.config.frequency))
@@ -79,6 +120,11 @@ class SwingPlanner:
         return npvals[0], npvals[1], npvals[2]
 
     def circular_discretizer(self, angle_start, angle_end, xcenter, ycenter, zcenter, duration):
+        #################### READ ME ######################
+        """ This first ensures the starting angle is correct so we dont go
+            around the circle in the wrong direction and then calculates
+            x,y,z making sure to project x,y to their respective planes"""
+
         n = max(2,int(duration * self.config.frequency))
 
         sign_product = (1 if self.state.velocityX >= 0 else -1) * (1 if self.state.velocityY >= 0 else -1)
@@ -98,6 +144,9 @@ class SwingPlanner:
         return x_uni, y_uni, z_uni
 
     def zero_velocity_discrete(self):
+        #################### READ ME ######################
+        """ Calculates the smooth trajectory of the legs when velocity is zero"""
+
         n = int(0.5 * self.config.swingtime * self.config.frequency)
         array_up = np.linspace(0, 1, n)
         array_down = np.linspace(1, 0, n)
@@ -108,6 +157,8 @@ class SwingPlanner:
         return np.concatenate((smoothed_motion_up, smoothed_motion_down))
 
     def discretizer(self):
+        #################### READ ME ######################
+        """ Discretizes based on velocity using above functions and returning to gait planner"""
         if self.state.velocityX + self.state.velocityY == 0:
             z_discrete = self.zero_velocity_discrete() - self.config.body_height
             x_discrete = np.zeros(len(z_discrete))

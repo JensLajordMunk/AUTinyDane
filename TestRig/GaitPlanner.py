@@ -17,6 +17,30 @@ class GaitPlanner:
         self.command = command
 
     def trot_begin(self):
+        #################### READ ME ########################
+
+        """ This code moves the feet into an initial position where the trot can begin from
+            and is done in the current manner:
+
+            1. The feet are all in the same position, we store this initial velocity, as we
+            will modify the states directly and will revert back after this operation
+
+            2. We make the swingtime equal to the stance time and divide the velocity in two
+
+            3. Now we can calculate the footlocations and by forcing them forward by the
+            Raibert touchdown location we will succesfully have placed one pair in the very
+            front of the stance phase
+
+            4. Now the other pair needs to go back 1/6 of the entire stance phase, remember
+            that the feet are currently halfway through the stance phase because we are at
+            zero, meaning the feet will end up 2/3 of the stance phase
+
+            5. The stance locations needs to be forced backwards by one Raibert touchdown
+            location such that the coordinates progress from the middle of the stance phase
+            and back to the desired position
+
+            6. This will mean the feet can progress into a semi trot pattern """
+
         velocityX = self.state.velocityX
         velocityY = self.state.velocityY
         self.config.swingtime = self.config.swingtime * 3 #Equal swing and stance time
@@ -47,7 +71,13 @@ class GaitPlanner:
 
 
     def trot(self, pair_index):
+        #################### READ ME ########################
 
+        """ This takes the pair index as input and if it is the first iteration of the
+            trot cycle it finishes the phase. Else the it checks the current in_phase
+            status and updates the pairs x,y,z points based on if the foot is finishing
+            a swing phase or stance phase. Both pairs need to be fed into the algorithm
+            on the first iteration"""
 
         if self.state.firstIt:
 
@@ -80,6 +110,11 @@ class GaitPlanner:
 
 
     def trot_begin_actuated(self):
+        #################### READ ME ########################
+
+        """ This part should only be used once for the robot to place the robot
+            in its correct initial position, see trot_begin()"""
+
         xstance, ystance, zstance, xswing, yswing, zswing = self.trot_begin()
         n=min(len(xswing),len(xstance))
 
