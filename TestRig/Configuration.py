@@ -5,7 +5,7 @@ from ServoCalibration import ServoCalibration
 class PWMParams:
     def __init__(self):
         self.range = 65535
-        self.freq = 330
+        self.freq = 100
 
 
 class ServoParams:
@@ -67,7 +67,10 @@ class RobotConfig:
         # -------------- Max parameters ----------------
         self.max_velocityX = 0.05
         self.max_velocityY = 0.02
-        self.max_yaw_rate =  20 #rad/s
-        self.max_yaw_stand = 20
-        self.max_pitch = 20
-        self.max_roll = 20
+        self.max_yaw_rate =  20 #deg/s
+        self.max_yaw_stand = 20 #deg
+        self.max_pitch = 20 #deg
+        self.max_roll = 20 #deg
+        self.max_x = 0.04 #meters
+        self.max_y = 0.04 #meters
+        self.max_z = 0.04 #meters
