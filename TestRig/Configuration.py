@@ -74,3 +74,10 @@ class RobotConfig:
         self.max_yaw_stand = 20
         self.max_pitch = 20
         self.max_roll = 20
+        self.max_yaw_rate =  20 #deg/s
+        self.max_yaw_stand = 20 #deg
+        self.max_pitch = 20 #deg
+        self.max_roll = 20 #deg
+        self.max_x = 0.04 #meters
+        self.max_y = 0.04 #meters
+        self.max_z = 0.04 #meters
