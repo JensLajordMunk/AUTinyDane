@@ -54,6 +54,7 @@ class RobotConfig:
         self.body_height = 0.1116
 
         # -------------- Gait parameters ----------------
+        self.swing_method = "BEZIER"
         self.arcR = 0.012
         self.velocity = 0.02
         self.stancetime = 2
@@ -67,7 +68,9 @@ class RobotConfig:
         # -------------- Max parameters ----------------
         self.max_velocityX = 0.05
         self.max_velocityY = 0.02
-        self.max_yaw_rate =  20 #rad/s
+        self.max_acceleration = 0.01 #m/s^2
+        self.max_yaw_acceleration = 10 # deg/s^2
+        self.max_yaw_rate =  20 #deg/s
         self.max_yaw_stand = 20
         self.max_pitch = 20
         self.max_roll = 20

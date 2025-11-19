@@ -62,10 +62,6 @@ class GaitPlanner:
 
         self.state.velocityX = velocityX #resets velocity
         self.state.velocityY = velocityY  # resets velocity
-        initial_phases = int(self.config.frequency * self.config.stancetime)
-
-        self.state.legpair_phases_remaining[0] = initial_phases
-        self.state.legpair_phases_remaining[1] = initial_phases
 
         return xstance, ystance, zstance, xswing, yswing, zswing
 

@@ -4,6 +4,7 @@ class State:
     def __init__(self,config):
         self.config = config
         self.leg_pair_in_swing = np.array([False, False])
+        self.legpair_start_time = [0,0]
         self.firstIt = True
         self.legpair_phases_remaining = np.array([0,0])
         self.foot_locations = np.zeros((3, 4))
