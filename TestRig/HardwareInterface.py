@@ -2,9 +2,11 @@ import numpy as np
 import board
 import busio
 from adafruit_pca9685 import PCA9685
+import adafruit_mpu6050
 from Configuration import PWMParams, ServoParams
 # The following line is a fix for raspberrypi4
 import types
+import math
 
  
 class HardwareInterface:
@@ -25,6 +27,9 @@ class HardwareInterface:
         self.pca3.frequency = self.pwm_params.freq
 
         self.channels = [0, 1, 2]
+
+        # Initialize IMU (Adafruit MPU6050)
+        self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -83,6 +88,25 @@ class HardwareInterface:
             self.pca2.channels[ch].duty_cycle = duty_cycle
         elif leg_index == 3:
             self.pca3.channels[ch].duty_cycle = duty_cycle
+
+    def get_imu_tilt(self):
+        """
+        Returns (pitch, roll) in degrees.
+        Uses accelerometer only (simple, stable for slow walking)
+        """
+
+        ax, ay, az = self.mpu.acceleration  # m/s²
+
+        # Convert to g for angle math
+        ax /= 9.80665
+        ay /= 9.80665
+        az /= 9.80665
+
+        pitch = math.degrees(math.atan2(ax, math.sqrt(ay * ay + az * az)))
+        roll = math.degrees(math.atan2(ay, math.sqrt(ax * ax + az * az)))
+
+        return pitch, roll
+
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
 
