@@ -145,7 +145,7 @@ class SwingPlanner:
     def triangular_discretizer(self,time):
         #################### READ ME ######################
         """ Discretizes based on velocity using above functions and returning to gait planner"""
-        if round(self.state.velocityX + self.state.velocityY,10) == 0.0:
+        if round(abs(self.state.velocityX) + abs(self.state.velocityY),10) == 0.0:
             ratio = time/self.config.swingtime
             x, y, z = self.zero_velocity_discrete(ratio)
 

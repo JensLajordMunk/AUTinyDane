@@ -21,7 +21,7 @@ class StancePlanner:
         """ Discretizes stance as a linear line between front and back position,
             but if the velocity is zero changes to constant"""
 
-        if round(self.state.velocityX + self.state.velocityY,10) == 0.0:
+        if round(abs(self.state.velocityX) + abs(self.state.velocityY),10) == 0.0:
             x = 0
             y = 0
             z = - self.config.body_height
