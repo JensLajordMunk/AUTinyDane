@@ -81,3 +81,13 @@ class RobotConfig:
         self.max_x = 0.04 #meters
         self.max_y = 0.04 #meters
         self.max_z = 0.04 #meters
+
+        # -------------- PD controller ----------------
+        self.k_p_stand_pitch = 0.01
+        self.k_d_stand_pitch = 0.01
+        self.k_p_stand_roll = 0.01
+        self.k_d_stand_roll = 0.01
+        self.k_p_stance_pitch = 0.01
+        self.k_d_stance_pitch = 0.01
+        self.k_p_stance_roll = 0.01
+        self.k_d_stance_roll = 0.01
