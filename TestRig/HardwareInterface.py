@@ -32,7 +32,7 @@ class HardwareInterface:
         # Initialize IMU (Adafruit MPU6050)
         #self.mpu = MPU6050(self.i2c, address=0x68)
 
-        self.sensor = mpu6050(0x68)
+        self.mpu = mpu6050(0x68)
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -93,22 +93,25 @@ class HardwareInterface:
             self.pca3.channels[ch].duty_cycle = duty_cycle
 
     def get_imu_tilt(self):
-        """
-        Returns (pitch, roll) in degrees.
-        Uses accelerometer only (simple, stable for slow walking)
-        """
+        # 1. Hent rå data
+        accel = self.mpu.get_accel_data()
 
-        ax, ay, az = self.mpu.acceleration()  # m/s²
+        x = accel['x']
+        y = accel['y']
+        z = accel['z']
 
-        # Convert to g for angle math
-        ax /= 9.80665
-        ay /= 9.80665
-        az /= 9.80665
+        # 2. Beregn Roll (Rotation om X-aksen)
+        roll_rad = math.atan2(y, z)
 
-        pitch = math.degrees(math.atan2(ax, math.sqrt(ay * ay + az * az)))
-        roll = math.degrees(math.atan2(ay, math.sqrt(ax * ax + az * az)))
+        # 3. Beregn Pitch (Rotation om Y-aksen)
+        yz_dist = math.sqrt(y * y + z * z)
+        pitch_rad = math.atan2(-x, yz_dist)
 
-        return pitch, roll
+        # 4. Konverter fra radianer til grader
+        roll_deg = math.degrees(roll_rad)
+        pitch_deg = math.degrees(pitch_rad)
+
+        return pitch_deg, roll_deg
 
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
