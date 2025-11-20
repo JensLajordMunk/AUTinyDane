@@ -7,9 +7,9 @@ class ServoCalibration:
                                  [ 11.994, 11.755, 11.397, 11.932]]
                                 )# TODO: Insert values from servo motor: micros_per_rad = dPWM/dAngle
         self.NEUTRAL_ANGLE_DEGREES = np.array(
-                                [[ -6.0, -34.0, -48., -8.],
-                                 [ 45., 45.-5., 45.-14., 45.+3.],
-                                 [ -45.+10., -45.+22., -45.+12., -45.+27.]]
+                                [[ 12.0, 24., -40., 0.],
+                                 [ 45.+16.0, 45., 45.+3., 45.+15.],
+                                 [ -37.6+2., -37.6, -37.6-3., -37.6+11.]]
                                 )
         self.neutral_position_pwm = np.array(
                                 [[ 1625.7,  1726.6,  1588.108,  1522.604],
