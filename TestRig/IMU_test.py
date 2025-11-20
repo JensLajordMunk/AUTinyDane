@@ -2,16 +2,21 @@ from HardwareInterface import HardwareInterface
 import time
 
 def main():
-    print("IMU test running... Move the robot to see pitch/roll changes.\n")
+    hw = HardwareInterface()
 
-    while True:
-        try:
-            pitch, roll = HardwareInterface.get_imu_tilt()
-            print(f"Pitch: {pitch:.2f}°   Roll: {roll:.2f}°")
-            time.sleep(0.1)
-        except KeyboardInterrupt:
-            print("\nIMU test stopped.")
-            break
+    print("Måler vinkler... (Ctrl+C for stop)")
 
-if __name__ == "__main__":
-    main()
+    try:
+        while True:
+            # Hent de beregnede vinkler
+            pitch, roll = hw.get_imu_tilt()
+
+            # Print pænt med 1 decimal
+            print(f"Pitch: {pitch:.1f}°  |  Roll: {roll:.1f}°")
+
+            time.sleep(0.2)
+
+    except KeyboardInterrupt:
+        print("Stoppet.")
+
+main()

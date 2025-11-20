@@ -1,6 +1,4 @@
-from click import command
 from pyPS4Controller.controller import Controller
-from threading import Lock
 from Command import Modes
 
 
@@ -75,8 +73,7 @@ class DogController(Controller):
             if direction == self.HORIZONTAL:
                 coordinates[direction] = self.map_coordinates_y(value)
             elif direction == self.VERTICAL:
-                coordinates[direction] = self.map_coordinates_y(value)
-            # print(f"L3: {self.config.L3}\n R3: {self.config.R3}\n")
+                coordinates[direction] = -self.map_coordinates_y(value)
         else:
             # If not outside dead zone the direction should be 0
             coordinates[direction] = 0

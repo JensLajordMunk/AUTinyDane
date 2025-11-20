@@ -39,6 +39,20 @@ def main():
                     if command.mode != Modes.TRANSLATE:
                         break
 
+def main1():
+    config = RobotConfig()
+    state = State(config)
+    command = Command(config)
+    gait_planner = GaitPlanner(config,state,command)
+    control_panel = controller_listen(command)
+    stand_rotation_planner = StandRotationPlanner(config, state, command)
+    stand_translation_planner = StandTranslationPlanner(config, state, command)
+
+    while True:
+        stand_rotation_planner.run_rotation()
+
+
+
 main()
 
 
