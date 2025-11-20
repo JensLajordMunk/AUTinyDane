@@ -48,12 +48,22 @@ class GaitPlanner:
             x, y, z = self.get_swing_trajectory(dt)
             ratio = min(dt/self.config.swingtime,1.0)
             self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * (1-ratio)
+            self.state.stance_roll_pair[pair_index] = 0.0
+            self.state.stance_pitch_pair[pair_index] = 0.0
 
         else:
             dt = min(dt, self.config.stancetime) # Max time can be stance time
             x, y, z = self.stance_planner.linear_discretizer(dt)
             ratio = min(dt/self.config.stancetime,1.0)
             self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * ratio
+
+            roll, pitch, gx, gy = self.hardware_interface.get_imu_tilt()
+            desired_roll = 0.0
+            desired_pitch = 0.0
+            roll_error = desired_roll - roll
+            pitch_error = desired_pitch - pitch
+            self.state.stance_roll_pair[pair_index] = self.config.k_p_stance_roll*roll_error + gx * self.config.k_d_stance_roll
+            self.state.stance_pitch_pair[pair_index] = self.config.k_p_stance_pitch*pitch_error + gy * self.config.k_d_stance_pitch
 
         # Clip Yaw limits
         limit = abs(self.state.trot_yaw)
@@ -62,7 +72,7 @@ class GaitPlanner:
         pos_vec = np.array([x, y, z])
         for leg_index in self.config.leg_pairs[pair_index, :]:
             pos_with_offset = pos_vec + np.array([0, self.config.abduction_offsets[leg_index], 0])
-            final_pos = complete_kinematics(pos_with_offset, self.state.stance_yaw_pair[pair_index],0, 0, leg_index, self.config)
+            final_pos = complete_kinematics(pos_with_offset, self.state.stance_yaw_pair[pair_index],self.state.stance_pitch_pair[pair_index], self.state.stance_roll_pair[pair_index], leg_index, self.config)
             angles = inverse_kinematics(final_pos, leg_index, self.config)
             for motor_index in range(3):
                 self.hardware_interface.set_actuator_position(angles[motor_index], leg_index, motor_index)
