@@ -1,1 +1,0 @@
-GaitPlanner line 23. Change to stance time instead of multiplying by 3
