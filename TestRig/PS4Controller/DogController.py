@@ -1,4 +1,3 @@
-from click import command
 from pyPS4Controller.controller import Controller
 from threading import Lock
 from Command import Modes

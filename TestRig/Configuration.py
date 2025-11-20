@@ -5,7 +5,7 @@ from ServoCalibration import ServoCalibration
 class PWMParams:
     def __init__(self):
         self.range = 65535
-        self.freq = 330
+        self.freq = 200
 
 
 class ServoParams:
@@ -51,15 +51,15 @@ class RobotConfig:
         self.leg_low = 0.09278
         self.body_width = 0.09012
         self.body_length = 0.16993
-        self.body_height = 0.1116
+        self.body_height = 0.12
 
         # -------------- Gait parameters ----------------
-        self.swing_method = "BEZIER"
+        self.swing_method = "TRIANGULAR"
         self.arcR = 0.012
         self.velocity = 0.02
-        self.stancetime = 2
+        self.stancetime = 1
         self.swingtime = self.stancetime / 3  # semi trot gait pattern
-        self.step_height = 0.05
+        self.step_height = 0.04
         self.frequency = 30
         self.leg_pairs = np.array([[0, 3], [1, 2]])
 

@@ -2,7 +2,6 @@ import numpy as np
 import board
 import busio
 from adafruit_pca9685 import PCA9685
-from adafruit_mpu6050 import MPU6050
 from mpu6050 import mpu6050
 from Configuration import PWMParams, ServoParams
 # The following line is a fix for raspberrypi4
@@ -28,9 +27,6 @@ class HardwareInterface:
         self.pca3.frequency = self.pwm_params.freq
 
         self.channels = [0, 1, 2]
-
-        # Initialize IMU (Adafruit MPU6050)
-        #self.mpu = MPU6050(self.i2c, address=0x68)
 
         self.mpu = mpu6050(0x68)
 
