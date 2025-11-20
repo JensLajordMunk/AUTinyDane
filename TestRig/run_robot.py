@@ -1,4 +1,4 @@
-from GaitPlanner import GaitPlanner
+from GaitPlannerV2 import GaitPlanner
 from Configuration import RobotConfig
 from State import State
 from Command import Command, Modes
@@ -19,14 +19,14 @@ def main():
     while True:
         # MAIN LOOP
         match command.mode:
+
             case Modes.TROT:
-                gait_planner.trot_begin_actuated()
+                gait_planner.trot_begin()
                 while True:
-                    loop_time = time.time()
                     gait_planner.trot_cycle_actuated()
                     if state.velocityY + state.velocityX == 0 and command.mode != Modes.TROT:
                         break
-                    time.sleep((1.0 / config.frequency) - (time.time() - loop_time))
+
             case Modes.ROTATE:
                 while True:
                     stand_rotation_planner.run_rotation()
