@@ -2,7 +2,8 @@ import numpy as np
 import board
 import busio
 from adafruit_pca9685 import PCA9685
-import adafruit_mpu6050
+from adafruit_mpu6050 import MPU6050
+from mpu6050 import mpu6050
 from Configuration import PWMParams, ServoParams
 # The following line is a fix for raspberrypi4
 import types
@@ -29,7 +30,9 @@ class HardwareInterface:
         self.channels = [0, 1, 2]
 
         # Initialize IMU (Adafruit MPU6050)
-        self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
+        #self.mpu = MPU6050(self.i2c, address=0x68)
+
+        self.sensor = mpu6050(0x68)
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -95,7 +98,7 @@ class HardwareInterface:
         Uses accelerometer only (simple, stable for slow walking)
         """
 
-        ax, ay, az = self.mpu.acceleration  # m/s²
+        ax, ay, az = self.mpu.acceleration()  # m/s²
 
         # Convert to g for angle math
         ax /= 9.80665
