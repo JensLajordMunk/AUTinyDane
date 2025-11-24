@@ -3,9 +3,12 @@ from Kinematics import inverse_kinematics
 from Rotation import complete_kinematics
 from StancePlannerV2 import StancePlanner
 from SwingPlannerV2 import SwingPlanner
+from InertiaBalancer import InertiaBalancer
 import numpy as np
 import time
 
+
+# TODO: Implement terrain adaptation
 
 class GaitPlanner:
     def __init__(self, config, state, command):
@@ -15,8 +18,11 @@ class GaitPlanner:
         self.hardware_interface = HardwareInterface()
         self.stance_planner = StancePlanner(self.state, self.config)
         self.swing_planner = SwingPlanner(self.state, self.config)
+        self.balancer = InertiaBalancer(self.config)
         self.state.legpair_start_time = [time.time(), time.time()]
         self.last_loop_time = time.time()
+        self.driven_velocityX = 0.0
+        self.driven_velocityY = 0.0
 
     def get_swing_trajectory(self, dt):
         method = self.config.swing_method.upper()
@@ -47,16 +53,16 @@ class GaitPlanner:
             dt = min(dt, self.config.swingtime) # Max time can be swing time
             x, y, z = self.get_swing_trajectory(dt)
             ratio = min(dt/self.config.swingtime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * (1-ratio)
+            self.state.stance_yaw_pair[pair_index] = self.config.stancetime * self.state.trot_yaw * (1-ratio)
 
         else:
             dt = min(dt, self.config.stancetime) # Max time can be stance time
             x, y, z = self.stance_planner.linear_discretizer(dt)
             ratio = min(dt/self.config.stancetime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * ratio
+            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * ratio
 
         # Clip Yaw limits
-        limit = abs(self.state.trot_yaw)
+        limit = abs(self.state.trot_yaw * self.config.stancetime)
         self.state.stance_yaw_pair[pair_index] = np.clip(self.state.stance_yaw_pair[pair_index], -limit, limit)
 
         pos_vec = np.array([x, y, z])
@@ -84,19 +90,19 @@ class GaitPlanner:
         loop_dt = current_time - self.last_loop_time
         self.last_loop_time = current_time
 
-        diff_x = self.command.velocityX - self.state.velocityX
-        diff_y = self.command.velocityY - self.state.velocityY
+        diff_x = self.command.velocityX - self.driven_velocityX
+        diff_y = self.command.velocityY - self.driven_velocityY
         magnitude = np.sqrt(diff_x ** 2 + diff_y ** 2)
 
         max_step = self.config.max_acceleration * loop_dt
 
         if magnitude > max_step:
             scale = max_step / magnitude
-            self.state.velocityX += diff_x * scale
-            self.state.velocityY += diff_y * scale
+            self.driven_velocityX += diff_x * scale
+            self.driven_velocityY += diff_y * scale
         else:
-            self.state.velocityX = self.command.velocityX
-            self.state.velocityY = self.command.velocityY
+            self.driven_velocityX = self.command.velocityX
+            self.driven_velocityY = self.command.velocityY
 
         diff_yaw = self.command.trot_yaw - self.state.trot_yaw
         max_yaw_step = self.config.max_yaw_acceleration * loop_dt
@@ -105,6 +111,15 @@ class GaitPlanner:
             self.state.trot_yaw += np.sign(diff_yaw) * max_yaw_step
         else:
             self.state.trot_yaw = self.command.trot_yaw
+
+        pitch, roll, gx, gy = self.hardware_interface.get_imu_tilt()
+        velocity_offsetx, velocity_offsety = self.balancer.velocity_offset(loop_dt, pitch, roll, gx, gy)
+
+        self.state.velocityX = self.driven_velocityX + velocity_offsetx
+        self.state.velocityY = self.driven_velocityY + velocity_offsety
+
+        self.state.velocityX = np.clip(self.state.velocityX, -self.config.max_velocityX, self.config.max_velocityX)
+        self.state.velocityY = np.clip(self.state.velocityY, -self.config.max_velocityY, self.config.max_velocityY)
 
         self.actuate_pair(0, current_time)
         self.actuate_pair(1, current_time)

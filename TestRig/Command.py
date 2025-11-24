@@ -1,4 +1,3 @@
-import numpy as np
 from enum import Enum
 
 class Modes(Enum):
@@ -29,7 +28,7 @@ class Command:
 
     @property
     def trot_yaw(self):
-        return self.config.max_yaw_rate * self.R3[1]
+        return self.config.max_yaw_rate * self.R3[0]
 
     @property
     def stand_pitch(self):
@@ -53,9 +52,9 @@ class Command:
 
     @property
     def velocityX(self):
-        return self.config.max_velocityX * self.L3[0]
+        return 0.75 * self.config.max_velocityX * self.L3[1]
 
     @property
     def velocityY(self):
-        return self.config.max_velocityY * self.L3[1]
+        return 0.75 * self.config.max_velocityY * self.L3[0]
 
