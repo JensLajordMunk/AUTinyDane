@@ -6,7 +6,6 @@ from mpu6050 import mpu6050
 from Configuration import PWMParams, ServoParams
 # The following line is a fix for raspberrypi4
 import types
-import math
 
  
 class HardwareInterface:
@@ -89,28 +88,27 @@ class HardwareInterface:
             self.pca3.channels[ch].duty_cycle = duty_cycle
 
     def get_imu_tilt(self):
-        # 1. Hent rå data
+        # Getting data from IMU
         accel = self.mpu.get_accel_data()
         gyro = self.mpu.get_gyro_data()
 
         gx = gyro['x']  # rotation about X-axis (°/s)
         gy = gyro['y']  # rotation about Y-axis (°/s)
-        gz = gyro['z']  # rotation about Z-axis (°/s)
 
         x = accel['x']
         y = accel['y']
         z = accel['z']
 
-        # 2. Beregn Roll (Rotation om X-aksen)
-        roll_rad = math.atan2(y, z)
+        # Roll in radians
+        roll_rad = np.atan2(y, z)
 
-        # 3. Beregn Pitch (Rotation om Y-aksen)
-        yz_dist = math.sqrt(y * y + z * z)
-        pitch_rad = math.atan2(-x, yz_dist)
+        # Pitch in radians
+        yz_dist = np.sqrt(y * y + z * z)
+        pitch_rad = np.atan2(-x, yz_dist)
 
-        # 4. Konverter fra radianer til grader
-        roll_deg = math.degrees(roll_rad)
-        pitch_deg = math.degrees(pitch_rad)
+        # Convert to degrees
+        roll_deg = np.degrees(roll_rad)
+        pitch_deg = np.degrees(pitch_rad)
 
         return roll_deg, pitch_deg, gx, gy
 
