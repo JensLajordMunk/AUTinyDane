@@ -2,6 +2,7 @@ import numpy as np
 from enum import Enum
 
 class Modes(Enum):
+    NEUTRAL = 0
     TROT = 1
     ROTATE = 2
     TRANSLATE = 3
@@ -20,7 +21,7 @@ class Command:
         self.yaw_array = []
         self.pitch_array = []
         self.roll_array = []
-        self.mode = Modes.TROT
+        self.mode = Modes.NEUTRAL
 
     @property
     def stand_yaw(self):

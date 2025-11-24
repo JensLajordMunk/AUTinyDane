@@ -91,6 +91,11 @@ class HardwareInterface:
     def get_imu_tilt(self):
         # 1. Hent rå data
         accel = self.mpu.get_accel_data()
+        gyro = self.mpu.get_gyro_data()
+
+        gx = gyro['x']  # rotation about X-axis (°/s)
+        gy = gyro['y']  # rotation about Y-axis (°/s)
+        gz = gyro['z']  # rotation about Z-axis (°/s)
 
         x = accel['x']
         y = accel['y']
@@ -107,7 +112,7 @@ class HardwareInterface:
         roll_deg = math.degrees(roll_rad)
         pitch_deg = math.degrees(pitch_rad)
 
-        return pitch_deg, roll_deg
+        return roll_deg, pitch_deg, gx, gy
 
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):

@@ -26,6 +26,9 @@ class DogController(Controller):
     def on_square_press(self):
         self.command_config.mode = Modes.TRANSLATE
 
+    def on_triangle_press(self):
+        self.command_config.mode = Modes.NEUTRAL
+
     def on_L3_up(self, value):
         self.modify_coordinates(self.command_config.L3, value, self.VERTICAL)
 

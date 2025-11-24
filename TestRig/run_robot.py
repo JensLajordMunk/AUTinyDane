@@ -20,6 +20,12 @@ def main():
         # MAIN LOOP
         match command.mode:
 
+            case Modes.NEUTRAL:
+                while True:
+                    stand_translation_planner.run_translation()
+                    if command.mode != Modes.NEUTRAL:
+                        break
+
             case Modes.TROT:
                 gait_planner.trot_begin()
                 while True:
@@ -38,19 +44,6 @@ def main():
                     stand_translation_planner.run_translation()
                     if command.mode != Modes.TRANSLATE:
                         break
-
-def main1():
-    config = RobotConfig()
-    state = State(config)
-    command = Command(config)
-    gait_planner = GaitPlanner(config,state,command)
-    control_panel = controller_listen(command)
-    stand_rotation_planner = StandRotationPlanner(config, state, command)
-    stand_translation_planner = StandTranslationPlanner(config, state, command)
-
-    while True:
-        stand_rotation_planner.run_rotation()
-
 
 
 main()

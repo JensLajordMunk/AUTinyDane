@@ -17,6 +17,11 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     l_up = configuration.leg_up
     l_low = configuration.leg_low
 
+    # Clip x,y,z values:
+    x = np.clip(x,-configuration.max_x,configuration.max_x)
+    y = np.clip(y,configuration.abduction_offsets[leg_index]-configuration.max_y,configuration.abduction_offsets[leg_index]+configuration.max_y)
+    z = np.clip(z,-configuration.body_height-configuration.max_z,-configuration.body_height+configuration.max_z)
+
     # Determine abductor angle:
     # Angle between direction of d_yz_af from Abductor to Foot in yz-plane and positive y-axis:
     alpha = np.arctan2(z,y)

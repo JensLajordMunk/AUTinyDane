@@ -4,7 +4,9 @@ from Kinematics import inverse_kinematics
 
 
 def complete_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
-
+    yaw = np.clip(yaw,-configuration.max_yaw_stand,configuration.max_yaw_stand)
+    pitch = np.clip(pitch,-configuration.max_pitch,configuration.max_pitch)
+    roll = np.clip(roll,-configuration.max_roll,configuration.max_roll)
     (x,y,z) = r_abductor_foot
     o_abd = configuration.abduction_offsets[leg_index]
     w_body = configuration.body_width
