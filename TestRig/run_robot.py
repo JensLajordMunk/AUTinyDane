@@ -4,6 +4,7 @@ from State import State
 from Command import Command, Modes
 from StandRotationPlanner import StandRotationPlanner
 from StandTranslationPlanner import StandTranslationPlanner
+from StandNeutral import StandNeutral
 from PS4Controller.controllerInput import controller_listen, controller_stop
 import time
 
@@ -15,6 +16,7 @@ def main():
     control_panel = controller_listen(command)
     stand_rotation_planner = StandRotationPlanner(config, state, command)
     stand_translation_planner = StandTranslationPlanner(config, state, command)
+    stand_neutral = StandNeutral(config, state, command)
 
     while True:
         # MAIN LOOP
@@ -22,7 +24,7 @@ def main():
 
             case Modes.NEUTRAL:
                 while True:
-                    stand_translation_planner.run_translation()
+                    stand_neutral.run_neutral()
                     if command.mode != Modes.NEUTRAL:
                         break
 

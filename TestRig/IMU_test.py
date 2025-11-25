@@ -9,10 +9,10 @@ def main():
     try:
         while True:
             # Hent de beregnede vinkler
-            pitch, roll = hw.get_imu_tilt()
+            roll, pitch, gx, gy= hw.get_imu_tilt()
 
             # Print pænt med 1 decimal
-            print(f"Pitch: {pitch:.1f}°  |  Roll: {roll:.1f}°")
+            print(f"Pitch: {pitch:.1f}°  |  Roll: {roll:.1f} |  gy: {gy:.1f} |  gx: {gx:.1f}°")
 
             time.sleep(0.2)
 

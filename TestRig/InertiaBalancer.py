@@ -25,4 +25,4 @@ class InertiaBalancer:
         vx_offset = dt * accel_x
         vy_offset = dt * accel_y
 
-        return vx_offset, vy_offset
+        return 0.0, 0.0
