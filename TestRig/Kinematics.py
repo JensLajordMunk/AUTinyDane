@@ -67,8 +67,3 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     theta_knee = theta_hip + phi - np.pi
 
     return np.array([theta_abductor, theta_hip, theta_knee])
-
-def four_inverse_kinematics(r_body_foot,configuration):
-    alpha = np.zeros(3,4)
-
-    return alpha

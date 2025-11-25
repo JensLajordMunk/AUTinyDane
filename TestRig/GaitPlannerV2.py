@@ -4,6 +4,7 @@ from Rotation import complete_kinematics
 from StancePlannerV2 import StancePlanner
 from SwingPlannerV2 import SwingPlanner
 from InertiaBalancer import InertiaBalancer
+from FallExit import emergency_stop
 import numpy as np
 import time
 
@@ -113,6 +114,9 @@ class GaitPlanner:
             self.state.trot_yaw = self.command.trot_yaw
 
         roll, pitch, gx, gy = self.hardware_interface.get_imu_tilt()
+
+        emergency_stop(roll, pitch)
+
         velocity_offsetx, velocity_offsety = self.balancer.velocity_offset(loop_dt, pitch, roll, gx, gy)
 
         self.state.velocityX = self.driven_velocityX + velocity_offsetx
