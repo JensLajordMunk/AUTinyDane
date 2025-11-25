@@ -52,9 +52,9 @@ class Command:
 
     @property
     def velocityX(self):
-        return 0.75 * self.config.max_velocityX * self.L3[1]
+        return 0.75 * self.config.max_velocityX * self.L3[1] # Leaves room for acceleration when falling
 
     @property
     def velocityY(self):
-        return 0.75 * self.config.max_velocityY * self.L3[0]
+        return -0.75 * self.config.max_velocityY * self.L3[0] # Negative to match left/right
 

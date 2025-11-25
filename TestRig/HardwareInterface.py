@@ -4,6 +4,7 @@ import busio
 from adafruit_pca9685 import PCA9685
 from mpu6050 import mpu6050
 from Configuration import PWMParams, ServoParams
+import time
 # The following line is a fix for raspberrypi4
 import types
 
@@ -28,6 +29,14 @@ class HardwareInterface:
         self.channels = [0, 1, 2]
 
         self.mpu = mpu6050(0x68)
+
+        self.accel_offset = {'x': 0, 'y': 0, 'z': 0}
+        self.gyro_offset = {'x': 0, 'y': 0, 'z': 0}
+        self.last_time = time.time()
+        self.alpha = 0.98
+        self.filt_roll = 0.0
+        self.filt_pitch = 0.0
+
 
     def set_actuator_positions(self, joint_angles):
         for leg_index in range(4):
@@ -92,12 +101,12 @@ class HardwareInterface:
         accel = self.mpu.get_accel_data()
         gyro = self.mpu.get_gyro_data()
 
-        gx = gyro['x']  # rotation about X-axis (°/s)
-        gy = gyro['y']  # rotation about Y-axis (°/s)
+        gx = gyro['x'] - self.gyro_offset['x']  # rotation about X-axis (°/s)
+        gy = gyro['y'] - self.gyro_offset['y']  # rotation about Y-axis (°/s)
 
-        x = accel['x']
-        y = accel['y']
-        z = accel['z']
+        x = accel['x'] - self.accel_offset['x']
+        y = accel['y'] - self.accel_offset['y']
+        z = accel['z'] - self.accel_offset['z']
 
         # Roll in radians
         roll_rad = np.atan2(y, z)
@@ -110,7 +119,15 @@ class HardwareInterface:
         roll_deg = np.degrees(roll_rad)
         pitch_deg = np.degrees(pitch_rad)
 
-        return -roll_deg, -pitch_deg, -gx, -gy
+        # Filtering using complementary filter
+        curr_time = time.time()
+        dt = curr_time - self.last_time
+        self.last_time = curr_time
+
+        self.filt_roll = self.alpha * (self.filt_roll + gx * dt) + (1 - self.alpha) * roll_deg
+        self.filt_pitch = self.alpha * (self.filt_pitch + gy * dt) + (1 - self.alpha) * pitch_deg
+
+        return -self.filt_roll, -self.filt_pitch, -gx, -gy
 
 
 def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
