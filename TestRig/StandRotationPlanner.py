@@ -25,8 +25,8 @@ class StandRotationPlanner:
 
         roll_imu, pitch_imu, gx, gy = self.hardware_interface.get_imu_tilt()
 
-        self.state.stand_pitch += self.config.k_p_stand_pitch*(desired_pitch - pitch_imu) - self.config.k_d_stand_pitch*gy
-        self.state.stand_roll += self.config.k_p_stand_roll*(desired_roll - roll_imu) - self.config.k_d_stand_roll*gx
+        self.state.stand_pitch += desired_pitch - pitch_imu
+        self.state.stand_roll += desired_roll - roll_imu
 
         print(self.state.stand_pitch, self.state.stand_roll)
 

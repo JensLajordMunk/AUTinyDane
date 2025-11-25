@@ -112,7 +112,7 @@ class GaitPlanner:
         else:
             self.state.trot_yaw = self.command.trot_yaw
 
-        pitch, roll, gx, gy = self.hardware_interface.get_imu_tilt()
+        roll, pitch, gx, gy = self.hardware_interface.get_imu_tilt()
         velocity_offsetx, velocity_offsety = self.balancer.velocity_offset(loop_dt, pitch, roll, gx, gy)
 
         self.state.velocityX = self.driven_velocityX + velocity_offsetx

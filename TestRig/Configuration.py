@@ -67,10 +67,10 @@ class RobotConfig:
 
         # -------------- Max parameters ----------------
         self.max_velocityX = 0.15
-        self.max_velocityY = 0.02
+        self.max_velocityY = 0.06
         self.max_acceleration = 0.05 #m/s^2
-        self.max_yaw_acceleration = 10 # deg/s^2
-        self.max_yaw_rate =  20 #deg/s
+        self.max_yaw_acceleration = 60 # deg/s^2
+        self.max_yaw_rate =  60 #deg/s
         self.max_yaw_stand = 20
         self.max_pitch = 20
         self.max_roll = 20
@@ -83,11 +83,7 @@ class RobotConfig:
         self.max_z = 0.04 #meters
 
         # -------------- PD controller ----------------
-        self.k_p_stand_pitch = 0.01
-        self.k_d_stand_pitch = 0.01
-        self.k_p_stand_roll = 0.01
-        self.k_d_stand_roll = 0.01
-        self.k_p_stance_pitch = 0.0
-        self.k_d_stance_pitch = 0.0
-        self.k_p_stance_roll = 0.0
-        self.k_d_stance_roll = 0.0
+        self.k_p_stand_pitch = 0.5
+        self.k_d_stand_pitch = 0.1
+        self.k_p_stand_roll = 0.5
+        self.k_d_stand_roll = 0.1

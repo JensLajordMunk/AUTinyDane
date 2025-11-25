@@ -17,12 +17,10 @@ class StandTranslationPlanner:
         self.state.stand_y =self.command.stand_y
         self.state.stand_z =self.command.stand_z
 
-        desired_roll = 0
-        desired_pitch = 0
         roll_imu, pitch_imu, gx, gy = self.hardware_interface.get_imu_tilt()
 
-        self.state.stand_pitch += self.config.k_p_stand_pitch*(desired_pitch - pitch_imu) - self.config.k_d_stand_pitch*gy
-        self.state.stand_roll += self.config.k_p_stand_roll*(desired_roll - roll_imu) - self.config.k_d_stand_roll*gx
+        self.state.stand_pitch -= pitch_imu
+        self.state.stand_roll -= roll_imu
 
         print(self.state.stand_pitch, self.state.stand_roll)
 
