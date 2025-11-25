@@ -3,11 +3,11 @@ matplotlib.use('TkAgg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from Configuration import RobotConfig
+from AUTinyDane.src.Configuration import RobotConfig
 from State import State
 from Kinematics import inverse_kinematics
 from Rotation import complete_kinematics
-from Command import Command
+from AUTinyDane.src.Command import Command
 import time
 import sys
 
@@ -19,7 +19,7 @@ class MockHardwareInterface:
 sys.modules['HardwareInterface'] = type(sys)('HardwareInterface')
 sys.modules['HardwareInterface'].HardwareInterface = MockHardwareInterface
 
-from GaitPlanner import GaitPlanner
+from AUTinyDane.legacy.GaitPlanner import GaitPlanner
 
 class GaitSimulator:
 
@@ -455,7 +455,6 @@ def animate_foot_3d(foot_data, foot_name='Front Left'):
     foot_name : str
         Name of the foot for the title ('Front Left' or 'Front Right')
     """
-    from mpl_toolkits.mplot3d import Axes3D
 
     x = foot_data[:, 0]
     y = foot_data[:, 1]

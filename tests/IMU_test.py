@@ -1,4 +1,4 @@
-from HardwareInterface import HardwareInterface
+from src.HardwareInterface import HardwareInterface
 import time
 
 def main():

@@ -1,6 +1,6 @@
-from HardwareInterface import HardwareInterface
-from Kinematics import inverse_kinematics
-from Rotation import complete_kinematics
+from src.HardwareInterface import HardwareInterface
+from src.Kinematics import inverse_kinematics
+from src.Rotation import complete_kinematics
 
 class StandNeutral:
 

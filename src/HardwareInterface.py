@@ -3,7 +3,7 @@ import board
 import busio
 from adafruit_pca9685 import PCA9685
 from mpu6050 import mpu6050
-from Configuration import PWMParams, ServoParams
+from src.Configuration import PWMParams, ServoParams
 import time
 # The following line is a fix for raspberrypi4
 import types

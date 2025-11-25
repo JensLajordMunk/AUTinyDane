@@ -1,12 +1,11 @@
-from GaitPlannerV2 import GaitPlanner
-from Configuration import RobotConfig
-from State import State
-from Command import Command, Modes
-from StandRotationPlanner import StandRotationPlanner
-from StandTranslationPlanner import StandTranslationPlanner
-from StandNeutral import StandNeutral
-from PS4Controller.controllerInput import controller_listen, controller_stop
-import time
+from src.GaitPlannerV2 import GaitPlanner
+from src.Configuration import RobotConfig
+from src.State import State
+from src.Command import Command, Modes
+from src.StandRotationPlanner import StandRotationPlanner
+from src.StandTranslationPlanner import StandTranslationPlanner
+from src.StandNeutral import StandNeutral
+from src.PS4Controller.controllerInput import controller_listen
 
 def main():
     config = RobotConfig()

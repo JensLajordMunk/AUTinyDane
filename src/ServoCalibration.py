@@ -1,4 +1,5 @@
 import numpy as np
+
 class ServoCalibration:
     def __init__(self):
         self.MICROS_PER_RAD = 180/np.pi*np.array(

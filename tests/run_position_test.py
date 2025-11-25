@@ -1,16 +1,16 @@
 import numpy as np
 import time
-from HardwareInterface import HardwareInterface
-from Configuration import RobotConfig
-from Kinematics import inverse_kinematics
-from Rotation import complete_kinematics
-from State import State
+from src.HardwareInterface import HardwareInterface
+from src.Configuration import RobotConfig
+from src.Kinematics import inverse_kinematics
+from src.Rotation import complete_kinematics
+from src.State import State
 
 
 def test_main():
     hardware_interface = HardwareInterface()
     configuration = RobotConfig()
-    state = State()
+    state = State(configuration)
 
     while True:
         leg_index = 1 #int(input("UPDATE NEUTRAL ANGLES BEFORE. Enter leg index: "))

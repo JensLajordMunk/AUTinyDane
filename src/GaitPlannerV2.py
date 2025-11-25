@@ -1,10 +1,10 @@
-from HardwareInterface import HardwareInterface
-from Kinematics import inverse_kinematics
-from Rotation import complete_kinematics
-from StancePlannerV2 import StancePlanner
-from SwingPlannerV2 import SwingPlanner
-from InertiaBalancer import InertiaBalancer
-from FallExit import emergency_stop
+from src.HardwareInterface import HardwareInterface
+from src.Kinematics import inverse_kinematics
+from src.Rotation import complete_kinematics
+from src.StancePlannerV2 import StancePlanner
+from src.SwingPlannerV2 import SwingPlanner
+from src.InertiaBalancer import InertiaBalancer
+from src.FallExit import emergency_stop
 import numpy as np
 import time
 

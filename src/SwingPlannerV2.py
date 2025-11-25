@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class SwingPlanner:
 
     def __init__(self, state, config):

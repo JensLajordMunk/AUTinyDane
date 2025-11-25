@@ -3,13 +3,11 @@
 # sudo apt-get install -y python3-pip
 # Low-level: pip3 install --upgrade adafruit-circuitpython-pca9685 adafruit-circuitpython-motor adafruit-blinka
 
-import time
 import numpy as np
-from HardwareInterface import HardwareInterface
-from Configuration import RobotConfig, ServoParams
-from ServoCalibration import ServoCalibration
-from Kinematics import inverse_kinematics
-from State import State
+from src.HardwareInterface import HardwareInterface
+from src.Configuration import RobotConfig, ServoParams
+from src.ServoCalibration import ServoCalibration
+from src.Kinematics import inverse_kinematics
 
 
 def test_leg_servo():

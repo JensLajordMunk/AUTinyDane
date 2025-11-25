@@ -1,5 +1,5 @@
 import numpy as np
-from ServoCalibration import ServoCalibration
+from src.ServoCalibration import ServoCalibration
 
 
 class PWMParams:

@@ -26,10 +26,10 @@ class VirtualClock:
 sys.modules['HardwareInterface'] = type(sys)('HardwareInterface')
 sys.modules['HardwareInterface'].HardwareInterface = MockHardwareInterface
 
-from Configuration import RobotConfig
-from State import State
-from Command import Command, Modes
-import GaitPlannerV2 as GP_Module
+from src.Configuration import RobotConfig
+from src.State import State
+from src.Command import Command
+import src.GaitPlannerV2 as GP_Module
 
 
 class KinematicMonitor:

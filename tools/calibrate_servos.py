@@ -1,4 +1,4 @@
-from HardwareInterface import HardwareInterface
+from src.HardwareInterface import HardwareInterface
 import numpy as np
 
 def get_motor_name(i, j):
@@ -65,7 +65,7 @@ class ServoCalibration:
     def __init__(self):
         self.MICROS_PER_RAD = {servo_params.micros_per_rad}
         self.NEUTRAL_ANGLE_DEGREES = {array_str}"""
-    with open("ServoCalibration.py", "w") as f:
+    with open("../src/ServoCalibration.py", "w") as f:
         f.write(file_contents)
 
 def calibrate_angle_offset(hardware_interface):

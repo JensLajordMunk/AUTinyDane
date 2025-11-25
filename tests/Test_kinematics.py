@@ -1,6 +1,6 @@
 import numpy as np
-from Configuration import RobotConfig, ServoParams
-from Kinematics import inverse_kinematics
+from src.Configuration import RobotConfig
+from src.Kinematics import inverse_kinematics
 
 configuration = RobotConfig()
 

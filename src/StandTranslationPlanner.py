@@ -1,8 +1,7 @@
-from HardwareInterface import HardwareInterface
-from Kinematics import inverse_kinematics
-from Rotation import complete_kinematics
-from Command import Command
-import numpy as np
+from src.HardwareInterface import HardwareInterface
+from src.Kinematics import inverse_kinematics
+from src.Rotation import complete_kinematics
+
 
 class StandTranslationPlanner:
 

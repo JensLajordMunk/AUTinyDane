@@ -3,7 +3,7 @@ matplotlib.use('TkAgg')  # Set backend before importing pyplot
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from Configuration import RobotConfig
+from src.Configuration import RobotConfig
 from SwingPlanner import SwingPlanner
 
 

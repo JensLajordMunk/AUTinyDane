@@ -1,7 +1,7 @@
 import numpy as np
-from HardwareInterface import HardwareInterface
-from Configuration import RobotConfig, ServoParams
-from Kinematics import inverse_kinematics
+from src.HardwareInterface import HardwareInterface
+from src.Configuration import RobotConfig
+from src.Kinematics import inverse_kinematics
 
 
 def servos_to_neutral():

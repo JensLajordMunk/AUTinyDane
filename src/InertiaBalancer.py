@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class InertiaBalancer:
 
     def __init__(self,config):

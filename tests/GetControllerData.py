@@ -1,6 +1,5 @@
-from PS4Controller.controllerInput import controller_listen, controller_stop
-import Command
-import Configuration
+from src.PS4Controller.controllerInput import controller_listen, controller_stop, Configuration
+from src.Command import Command
 import time
 
 if __name__ == "__main__":
