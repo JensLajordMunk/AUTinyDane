@@ -51,14 +51,10 @@ class GaitSimulator:
         self.log_fr.append(self.state.foot_locations[:, 1].copy())
         self.time_log.append(self.clock.time())
 
-    def set_virtual_joystick(self, target_vx, target_vy, target_yaw_rate):
-        lx = target_vx / self.config.max_velocityX
-        ly = target_vy / self.config.max_velocityY
-        rx = target_yaw_rate / self.config.max_yaw_rate
-
-        self.command.L3[0] = np.clip(lx, -1.0, 1.0)
-        self.command.L3[1] = np.clip(ly, -1.0, 1.0)
-        self.command.R3[1] = np.clip(rx, -1.0, 1.0)
+    def set_virtual_joystick(self, vx, vy, yaw_rate):
+        self.command.L3[1] = np.clip(vx, -1.0, 1.0)
+        self.command.L3[0] = np.clip(vy, -1.0, 1.0)
+        self.command.R3[0] = np.clip(yaw_rate, -1.0, 1.0)
 
     def run(self, duration_seconds=15.0):
         dt = 1.0 / 200
@@ -68,14 +64,10 @@ class GaitSimulator:
         for i in range(steps):
             t = self.clock.time()
 
-            if t < 1.0:
+            if t < 0.5:
                 self.set_virtual_joystick(0.0, 0.0, 0.0)
-            elif t < 5.0:
-                self.set_virtual_joystick(1, 1, 0.0)
-            elif t < 10.0:
-                self.set_virtual_joystick(0.0, 0.3, 0.0)
-            elif t < 15.0:
-                self.set_virtual_joystick(0.3, 0.3, 1.0)
+            elif t < 1.0:
+                self.set_virtual_joystick(1.0, 0.0, 1.0)
 
             self.gait_planner.trot_cycle_actuated()
             self.record_state()

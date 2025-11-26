@@ -65,13 +65,14 @@ class GaitPlanner:
             dt = min(dt, self.config.swingtime) # Max time can be swing time
             x, y, z = self.get_swing_trajectory(dt)
             ratio = min(dt/self.config.swingtime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.config.stancetime * self.state.trot_yaw * (1-ratio)
+            self.state.stance_yaw_pair[pair_index] = self.config.stancetime * self.state.trot_yaw * (0.5 - ratio)
 
         else:
             dt = min(dt, self.config.stancetime) # Max time can be stance time
             x, y, z = self.get_stance_trajectory(dt)
             ratio = min(dt/self.config.stancetime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * ratio
+            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * (ratio - 0.5)
+
 
         # Clip Yaw limits
         limit = abs(self.state.trot_yaw * self.config.stancetime)
@@ -95,9 +96,6 @@ class GaitPlanner:
             if dt >= duration:
                 self.state.leg_pair_in_swing[i] = not self.state.leg_pair_in_swing[i]
                 self.state.legpair_start_time[i] = current_time
-
-                if not self.state.leg_pair_in_swing[i]:
-                    self.state.stance_yaw_pair[i] = 0
 
         loop_dt = current_time - self.last_loop_time
         self.last_loop_time = current_time

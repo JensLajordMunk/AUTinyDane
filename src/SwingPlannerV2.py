@@ -223,21 +223,21 @@ class SwingPlanner:
         u = 1 - t
 
         TDX, TDY = self.touchdown_location()
-        bottom_offset = 0.015
-        top_offset = bottom_offset + 0.005
+        bottom_offset = 1.2
+        top_offset = bottom_offset + 0.1
         height_offset = 0.015
 
         P0 = np.array([-TDX, -TDY, 0])
-        P1 = np.array([-TDX-bottom_offset, -TDY-bottom_offset, 0])
-        P2 = np.array([-TDX-top_offset, -TDY-top_offset, self.config.step_height-height_offset])
+        P1 = np.array([-TDX*bottom_offset, -TDY*bottom_offset, 0])
+        P2 = np.array([-TDX*top_offset, -TDY*top_offset, self.config.step_height-height_offset])
         P3 = P2
         P4 = P2
         P5 = np.array([0, 0, self.config.step_height-height_offset])
         P6 = P5
         P7 = np.array([0, 0, self.config.step_height])
-        P8 = np.array([TDX+top_offset, TDY+top_offset, self.config.step_height])
+        P8 = np.array([TDX*top_offset, TDY*top_offset, self.config.step_height])
         P9 = P8
-        P10 = np.array([TDX+bottom_offset, TDY+bottom_offset, 0])
+        P10 = np.array([TDX*bottom_offset, TDY*bottom_offset, 0])
         P11 = np.array([TDX, TDY, 0])
 
         curve_pos = (
