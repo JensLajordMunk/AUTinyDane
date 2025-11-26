@@ -10,6 +10,8 @@ import sys
 class MockHardwareInterface:
     def set_actuator_position(self, angle, leg_index, motor_index):
         pass
+    def get_imu_tilt(self):
+        return 0,0,0,0
 
 
 class VirtualClock:
@@ -23,41 +25,13 @@ class VirtualClock:
         self.current_time += seconds
 
 
-sys.modules['HardwareInterface'] = type(sys)('HardwareInterface')
-sys.modules['HardwareInterface'].HardwareInterface = MockHardwareInterface
+sys.modules['src.HardwareInterface'] = type(sys)('src.HardwareInterface')
+sys.modules['src.HardwareInterface'].HardwareInterface = MockHardwareInterface
 
 from src.Configuration import RobotConfig
 from src.State import State
 from src.Command import Command
 import src.GaitPlannerV2 as GP_Module
-
-
-class KinematicMonitor:
-    @staticmethod
-    def check_workspace_safety(x, y, z, config):
-        min_safe_z = -config.body_height + 0.02
-        if z > min_safe_z:
-            z = min_safe_z
-
-        max_reach = (config.leg_up + config.leg_low) * 0.95
-
-        dist = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-        if dist > max_reach:
-            scale = max_reach / dist
-            x *= scale
-            y *= scale
-            z *= scale
-
-        return x, y, z
-
-    @staticmethod
-    def analyze_trajectory(positions, dt):
-        pos = np.array(positions)
-        vel = np.gradient(pos, axis=0) / dt
-        acc = np.gradient(vel, axis=0) / dt
-        jerk = np.gradient(acc, axis=0) / dt
-        jerk_norm = np.linalg.norm(jerk, axis=1)
-        return vel, acc, jerk, jerk_norm
 
 
 class GaitSimulator:
@@ -87,7 +61,7 @@ class GaitSimulator:
         self.command.R3[1] = np.clip(rx, -1.0, 1.0)
 
     def run(self, duration_seconds=15.0):
-        dt = 1.0 / 100
+        dt = 1.0 / 200
         steps = int(duration_seconds / dt)
         self.gait_planner.trot_begin()
 
@@ -97,7 +71,7 @@ class GaitSimulator:
             if t < 1.0:
                 self.set_virtual_joystick(0.0, 0.0, 0.0)
             elif t < 5.0:
-                self.set_virtual_joystick(0.4, 0.0, 0.0)
+                self.set_virtual_joystick(1, 1, 0.0)
             elif t < 10.0:
                 self.set_virtual_joystick(0.0, 0.3, 0.0)
             elif t < 15.0:
@@ -158,10 +132,8 @@ def visualize_results(fl, fr, dt):
     fl_x, fl_y, fl_z = fl[:, 0], fl[:, 1], fl[:, 2]
     fr_x, fr_y, fr_z = fr[:, 0], fr[:, 1], fr[:, 2]
 
-    vel, acc, jerk, jerk_norm = KinematicMonitor.analyze_trajectory(fr, dt)
-
     fig = plt.figure(figsize=(14, 10))
-    gs = fig.add_gridspec(3, 2)
+    gs = fig.add_gridspec(2, 1)
 
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.plot(fl_x, fl_y, label='Front Left')
@@ -177,26 +149,9 @@ def visualize_results(fl, fr, dt):
     ax2.set_title("Pos: Side View (XZ)")
     ax2.grid(True)
 
-    ax4 = fig.add_subplot(gs[0, 1])
-    time_axis = np.arange(len(jerk_norm)) * dt
-    ax4.plot(time_axis, jerk_norm, color='purple', lw=1)
-    ax4.set_title(f"JERK Magnitude")
-    ax4.set_ylabel("m/s^3")
-    ax4.grid(True)
-    ax4.axhline(y=500, color='r', linestyle='--', alpha=0.5, label='Threshold')
-    ax4.legend()
-
-    ax5 = fig.add_subplot(gs[1, 1])
-    acc_norm = np.linalg.norm(acc, axis=1)
-    ax5.plot(time_axis, acc_norm, color='orange', lw=1)
-    ax5.set_title("Acceleration Magnitude")
-    ax5.set_ylabel("m/s^2")
-    ax5.grid(True)
-
     plt.tight_layout()
     plt.show()
 
-    print("Starting 3D Animation...")
     animate_foot_3d(fr, 'Front Right - 3D Animation')
 
 

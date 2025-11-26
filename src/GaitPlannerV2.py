@@ -32,6 +32,17 @@ class GaitPlanner:
             return self.swing_planner.bezier_discretizer(dt)
         elif method == "TRIANGULAR":
             return self.swing_planner.triangular_discretizer(dt)
+        elif method == "CHEETAH":
+            return self.swing_planner.MIT_cheetah_bezier_discretizer(dt)
+        else:
+            raise ValueError("Wrong method in config")
+
+    def get_stance_trajectory(self, dt):
+        method = self.config.stance_method.upper()
+        if method == "LINEAR":
+            return self.stance_planner.linear_discretizer(dt)
+        elif method == "BEZIER":
+            return self.stance_planner.stance_bezier_discretizer(dt)
         else:
             raise ValueError("Wrong method in config")
 
@@ -58,7 +69,7 @@ class GaitPlanner:
 
         else:
             dt = min(dt, self.config.stancetime) # Max time can be stance time
-            x, y, z = self.stance_planner.linear_discretizer(dt)
+            x, y, z = self.get_stance_trajectory(dt)
             ratio = min(dt/self.config.stancetime,1.0)
             self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * ratio
 

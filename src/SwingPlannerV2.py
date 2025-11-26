@@ -213,3 +213,48 @@ class SwingPlanner:
         x, y, z = curve_pos[0], curve_pos[1], curve_pos[2]
 
         return x, y, z-self.config.body_height
+
+    def MIT_cheetah_bezier_discretizer(self, time):
+
+        # MIT inspired trajectory
+
+        ratio = time/self.config.swingtime
+        t = np.clip(ratio, 0.0, 1.0)
+        u = 1 - t
+
+        TDX, TDY = self.touchdown_location()
+        bottom_offset = 0.015
+        top_offset = bottom_offset + 0.005
+        height_offset = 0.015
+
+        P0 = np.array([-TDX, -TDY, 0])
+        P1 = np.array([-TDX-bottom_offset, -TDY-bottom_offset, 0])
+        P2 = np.array([-TDX-top_offset, -TDY-top_offset, self.config.step_height-height_offset])
+        P3 = P2
+        P4 = P2
+        P5 = np.array([0, 0, self.config.step_height-height_offset])
+        P6 = P5
+        P7 = np.array([0, 0, self.config.step_height])
+        P8 = np.array([TDX+top_offset, TDY+top_offset, self.config.step_height])
+        P9 = P8
+        P10 = np.array([TDX+bottom_offset, TDY+bottom_offset, 0])
+        P11 = np.array([TDX, TDY, 0])
+
+        curve_pos = (
+                (1 * u ** 11 * t ** 0 * P0) +
+                (11 * u ** 10 * t ** 1 * P1) +
+                (55 * u ** 9 * t ** 2 * P2) +
+                (165 * u ** 8 * t ** 3 * P3) +
+                (330 * u ** 7 * t ** 4 * P4) +
+                (462 * u ** 6 * t ** 5 * P5) +
+                (462 * u ** 5 * t ** 6 * P6) +
+                (330 * u ** 4 * t ** 7 * P7) +
+                (165 * u ** 3 * t ** 8 * P8) +
+                (55 * u ** 2 * t ** 9 * P9) +
+                (11 * u ** 1 * t ** 10 * P10) +
+                (1 * u ** 0 * t ** 11 * P11)
+        )
+
+        x, y, z = curve_pos[0], curve_pos[1], curve_pos[2]
+
+        return x, y, z-self.config.body_height
