@@ -75,9 +75,3 @@ class RobotConfig:
         self.max_z = 0.04 #meters
         self.max_velocityX = min(0.15, (self.max_x-self.arcR)*2/self.stancetime) #m/s
         self.max_velocityY = min(0.06, (self.max_y-self.arcR)*2/self.stancetime) #m/s
-
-        # -------------- PD controller ----------------
-        self.k_p_stand_pitch = 0.5
-        self.k_d_stand_pitch = 0.1
-        self.k_p_stand_roll = 0.5
-        self.k_d_stand_roll = 0.1
