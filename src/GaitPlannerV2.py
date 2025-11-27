@@ -64,14 +64,15 @@ class GaitPlanner:
         if self.state.leg_pair_in_swing[pair_index]:
             dt = min(dt, self.config.swingtime) # Max time can be swing time
             x, y, z = self.get_swing_trajectory(dt)
-            ratio = min(dt/self.config.swingtime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.config.stancetime * self.state.trot_yaw * (0.5 - ratio)
+            s = min(dt/self.config.swingtime,1.0)
+            smooth_factor = 6 * s ** 5 - 15 * s ** 4 + 10 * s ** 3
+            self.state.stance_yaw_pair[pair_index] = self.config.stancetime * self.state.trot_yaw * (0.5 - smooth_factor)
 
         else:
             dt = min(dt, self.config.stancetime) # Max time can be stance time
             x, y, z = self.get_stance_trajectory(dt)
-            ratio = min(dt/self.config.stancetime,1.0)
-            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * (ratio - 0.5)
+            s = min(dt/self.config.stancetime,1.0)
+            self.state.stance_yaw_pair[pair_index] = self.state.trot_yaw * self.config.stancetime * (s - 0.5)
 
 
         # Clip Yaw limits
