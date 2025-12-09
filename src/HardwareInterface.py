@@ -148,9 +148,6 @@ def angle_to_duty(angle, pwm_params, servo_params, motor_index, leg_index):
         angle - servo_params.neutral_angles[motor_index, leg_index]
     ) * servo_params.servo_multipliers[motor_index, leg_index]
     
-    if motor_index == 2:
-        angle_deviation = 1.22*angle_deviation
-    
     # Calculates the pulse width in µs
     pulse_width_micros = (
         servo_params.neutral_position_pwm[motor_index,leg_index]
@@ -175,9 +172,6 @@ def angle_to_duty0(angle, pwm_params, servo_params, motor_index, leg_index):
 
     # Finds the deviation from the neutral angle defined in ServoCalibration
     angle_deviation = angle * servo_params.servo_multipliers[motor_index, leg_index]
-
-    if motor_index == 2:
-        angle_deviation = 1.22*angle_deviation
 
     # Calculates the pulse width in µs
     pulse_width_micros = (
