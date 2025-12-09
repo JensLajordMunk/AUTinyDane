@@ -10,7 +10,7 @@ def test_kinematics():
     # target_angles = inverse_kinematics(np.array([x, y, z]), leg_index, configuration)
 
     # Insert your test point here (x forward, y left, z upward)
-    r_abductor_foot = (-0.0265, -0.04235, -0.144)
+    r_abductor_foot = (0, -0.04235, -0.13)
 
     # Choose which leg to test (typically 0–3)
     leg_index = 1

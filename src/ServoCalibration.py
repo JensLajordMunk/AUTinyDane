@@ -10,7 +10,7 @@ class ServoCalibration:
         self.NEUTRAL_ANGLE_DEGREES = np.array(
                                 [[ 12.0, 24., -40., 0.],
                                  [ 45.+1., 45.+8., 45.+2., 45.+5.],
-                                 [ -37.6, -37.6+3., -37.6+5., -37.6+1.]]
+                                 [ 29., 29., 29., 29.]]
                                 )
         self.neutral_position_pwm = np.array(
                                 [[ 1625.7,  1726.6,  1588.108,  1522.604],
