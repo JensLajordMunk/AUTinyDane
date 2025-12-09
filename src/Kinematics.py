@@ -16,6 +16,15 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     o_abd = configuration.abduction_offsets[leg_index]
     l_up = configuration.leg_up
     l_low = configuration.leg_low
+    l1 = configuration.l1
+    l2 = configuration.l2
+    l3 = configuration.l3
+    l4 = configuration.l4
+    l5 = configuration.l5
+    theta_low = configuration.theta_low
+    theta_pizza = configuration.theta_pizza
+    o_sx = configuration.servo_offset_x
+    o_sz = configuration.servo_offset_z
 
     # Clip x,y,z values:
     x = np.clip(x,-configuration.max_x,configuration.max_x)
@@ -66,4 +75,31 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     # The knee angle from negative z1 to lower leg is:
     theta_knee = theta_hip + phi - np.pi
 
-    return np.array([theta_abductor, theta_hip, theta_knee])
+
+    # ---- From knee angle to servo angle through tie rod ----
+    theta5 = theta_low + theta_knee - np.pi/2
+
+    a1 = l5*np.cos(theta5) + l_up*np.sin(theta_hip)
+    b1 = -l5*np.sin(theta5) + l_up*np.cos(theta_hip)
+    R1 = (a1**2+b1**2)**0.5
+
+    phi1 = np.arctan2(a1,b1)
+    arccos_argument = (l3 ** 2 + R1 ** 2 - l4 ** 2) / (2 * l3 * R1)
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
+    delta1  = np.arccos(arccos_argument)
+    theta3r = phi1 + delta1 - np.pi/2
+
+    theta3l = np.pi - theta_pizza - theta3r
+
+    a2 = l3*np.cos(theta3l) - o_sx
+    b2 = l3*np.sin(theta3l) + o_sz
+    R2 = (a2**2+b2**2)**0.5
+
+    phi2 = np.arctan2(b2,a2)
+    arccos_argument = (l1 ** 2 + R2 ** 2 - l2 ** 2) / (2 * l1 * R2)
+    arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
+    delta2 = np.arccos(arccos_argument)
+
+    theta1 = phi2 - delta2
+
+    return np.array([theta_abductor, theta_hip, theta1])

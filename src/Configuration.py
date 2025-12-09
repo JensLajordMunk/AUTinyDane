@@ -48,10 +48,19 @@ class RobotConfig:
         )
 
         self.leg_up = 0.08
-        self.leg_low = 0.09278
+        self.leg_low = 0.09225 # Should be measured based on neutral position
         self.body_width = 0.09012
         self.body_length = 0.16993
         self.body_height = 0.13
+        self.l1 = 0.024
+        self.l2 = 0.03
+        self.l3 = 0.0277
+        self.l4 = 0.1015
+        self.l5 = 0.0377
+        self.theta_low = 155.45*np.pi/180.0 #Should be measured based on neutral position
+        self.theta_pizza = 82.38*np.pi/180.0
+        self.servo_offset_x = 0.022
+        self.servo_offset_z = 0.020
 
         # -------------- Gait parameters ----------------
         self.swing_method = "CHEETAH"

@@ -1,6 +1,6 @@
 import numpy as np
 
-def complete_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
+def orientation_kinematics(r_abductor_foot,yaw,pitch,roll,leg_index,configuration):
 
     yaw = np.clip(yaw,-configuration.max_yaw_stand,configuration.max_yaw_stand)
     pitch = np.clip(pitch,-configuration.max_pitch,configuration.max_pitch)

@@ -3,7 +3,7 @@ import time
 from src.HardwareInterface import HardwareInterface
 from src.Configuration import RobotConfig
 from src.Kinematics import inverse_kinematics
-from src.Rotation import complete_kinematics
+from src.Rotation import orientation_kinematics
 from src.State import State
 
 
@@ -145,7 +145,7 @@ def complete_kinematics_test():
     thetas = np.zeros((3, 4))
 
     for i in range(4):
-        P[:,i] = complete_kinematics(P[:,i], yaw, pitch, roll, i, configuration)
+        P[:,i] = orientation_kinematics(P[:,i], yaw, pitch, roll, i, configuration)
         thetas[:,i] = inverse_kinematics(P[:,i], i, configuration)
     print(P)
     thetas_deg = thetas*180/np.pi
