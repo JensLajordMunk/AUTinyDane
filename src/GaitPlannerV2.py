@@ -125,7 +125,7 @@ class GaitPlanner:
 
         roll, pitch, gx, gy = self.hardware_interface.get_imu_tilt()
 
-        emergency_stop(roll, pitch)
+        #emergency_stop(roll, pitch)
 
         velocity_offsetx, velocity_offsety = self.balancer.velocity_offset(loop_dt, pitch, roll, gx, gy)
 

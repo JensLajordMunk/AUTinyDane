@@ -30,10 +30,10 @@ class HardwareInterface:
 
         self.mpu = mpu6050(0x68)
 
-        self.accel_offset = {'x': 0, 'y': 0, 'z': 0}
-        self.gyro_offset = {'x': 0, 'y': 0, 'z': 0}
+        self.accel_offset = {'x': 0.063, 'y': -0.455, 'z': 0.293}
+        self.gyro_offset  = {'x': -2.728, 'y': 0.103, 'z': -2.260}
         self.last_time = time.time()
-        self.alpha = 0.98
+        self.alpha = 0.7
         self.filt_roll = 0.0
         self.filt_pitch = 0.0
 
@@ -124,9 +124,16 @@ class HardwareInterface:
         dt = curr_time - self.last_time
         self.last_time = curr_time
 
-        self.filt_roll = self.alpha * (self.filt_roll + gx * dt) + (1 - self.alpha) * roll_deg
-        self.filt_pitch = self.alpha * (self.filt_pitch + gy * dt) + (1 - self.alpha) * pitch_deg
-
+        self.filt_roll = roll_deg #self.alpha * (self.filt_roll + gx * dt) + (1 - self.alpha) * roll_deg
+        self.filt_pitch = pitch_deg #self.alpha * (self.filt_pitch + gy * dt) + (1 - self.alpha) * pitch_deg
+        if np.abs(self.filt_roll) < 4:
+            self.filt_roll = 0.
+        if np.abs(self.filt_pitch) < 4:
+            self.filt_pitch = 0.
+        if np.abs(gx) < 2:
+            gx = 0.
+        if np.abs(gy) < 2:
+            gy = 0.
         return -self.filt_roll, -self.filt_pitch, -gx, -gy
 
 

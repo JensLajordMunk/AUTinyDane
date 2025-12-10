@@ -3,7 +3,7 @@ from mpu6050 import mpu6050
 """ MAKE SURE IT IS ON A FLAT SURFACE!!!"""
 
 sensor = mpu6050(0x68)
-N = 2000 # Change depending preference
+N = 4000 # Change depending preference
 ax, ay, az, gx, gy, gz = 0, 0, 0, 0, 0, 0
 input("Make sure the robot is on a completely flat surface. Proceed by button press")
 

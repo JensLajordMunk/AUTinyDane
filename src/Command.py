@@ -28,7 +28,7 @@ class Command:
 
     @property
     def trot_yaw(self):
-        return self.config.max_yaw_rate * self.R3[0]
+        return -self.config.max_yaw_rate * self.R3[0]
 
     @property
     def stand_pitch(self):

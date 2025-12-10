@@ -26,7 +26,7 @@ class ServoParams:
         self.servo_multipliers = np.array(
             [[1, 1, 1, 1],
              [1, -1, 1, -1],
-             [1, -1, 1, -1]]
+             [-1, 1, -1, 1]]
         )
 
     @property  # The property decorator makes sure that if neutral_angle_degrees is updated then neutral_angle updates
@@ -66,21 +66,21 @@ class RobotConfig:
         self.swing_method = "CHEETAH"
         self.stance_method = "BEZIER"
         self.arcR = 0.012
-        self.stancetime = 0.4
+        self.stancetime = 0.5
         self.swingtime = self.stancetime / 3  # semi trot gait pattern
         self.step_height = 0.04
         self.frequency = 30
         self.leg_pairs = np.array([[0, 3], [1, 2]])
 
         # -------------- Max parameters ----------------
-        self.max_acceleration = 0.05 #m/s^2
-        self.max_yaw_acceleration = 60 # deg/s^2
-        self.max_yaw_rate =  60 #deg/s
+        self.max_acceleration = 0.07 #m/s^2
+        self.max_yaw_acceleration = 40 # deg/s^2
+        self.max_yaw_rate =  50 #deg/s
         self.max_yaw_stand = 20 #deg
         self.max_pitch = 20 #deg
         self.max_roll = 20 #deg
-        self.max_x = 0.04 #meters
-        self.max_y = 0.04 #meters
+        self.max_x = 0.07 #meters
+        self.max_y = 0.06 #meters
         self.max_z = 0.04 #meters
-        self.max_velocityX = min(0.15, (self.max_x-self.arcR)*2/self.stancetime) #m/s
-        self.max_velocityY = min(0.06, (self.max_y-self.arcR)*2/self.stancetime) #m/s
+        self.max_velocityX = min(0.3, (self.max_x-self.arcR)*2/self.stancetime) #m/s
+        self.max_velocityY = min(0.1, (self.max_y-self.arcR)*2/self.stancetime) #m/s

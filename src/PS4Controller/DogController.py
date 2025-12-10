@@ -1,5 +1,5 @@
 from pyPS4Controller.controller import Controller
-from Command import Modes
+from src.Command import Modes
 
 
 class DogController(Controller):

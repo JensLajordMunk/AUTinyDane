@@ -22,12 +22,12 @@ class StandRotationPlanner:
         desired_roll = self.command.stand_roll
         desired_pitch = self.command.stand_pitch
 
-        roll_imu, pitch_imu, gx, gy = self.hardware_interface.get_imu_tilt()
+        #roll_imu, pitch_imu, gx, gy = self.hardware_interface.get_imu_tilt()
 
-        self.state.stand_pitch += desired_pitch - pitch_imu
-        self.state.stand_roll += desired_roll - roll_imu
+        self.state.stand_pitch = desired_pitch #- pitch_imu
+        self.state.stand_roll = desired_roll #- roll_imu
 
-        print(self.state.stand_pitch, self.state.stand_roll)
+        #print(self.state.stand_pitch, self.state.stand_roll)
 
         for leg_index in range(4):
             pos = orientation_kinematics([-self.state.stand_x, self.state.stand_y + self.config.abduction_offsets[leg_index], - self.state.stand_z - self.config.body_height], self.state.stand_yaw, self.state.stand_pitch, self.state.stand_roll, leg_index, self.config)
