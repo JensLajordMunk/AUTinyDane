@@ -1,6 +1,7 @@
 from src.HardwareInterface import HardwareInterface
 from src.Kinematics import inverse_kinematics
 from src.Rotation import orientation_kinematics
+import numpy as np
 
 
 class StandRotationPlanner:
@@ -10,24 +11,33 @@ class StandRotationPlanner:
         self.command = command
         self.state = state
         self.hardware_interface = HardwareInterface()
+        self.max_degree_change = 0.35
+        self.driven_roll = 0.0
+        self.driven_pitch = 0.0
+        self.driven_yaw = 0.0
 
     def run_rotation(self):
-        self.state.stand_yaw = self.command.stand_yaw
 
-        #Without PD controller:
-        #self.state.stand_roll = self.command.stand_roll
-        #self.state.stand_pitch = self.command.stand_pitch
+        diff_yaw = self.command.stand_yaw - self.state.stand_yaw
 
-        # PD controller:
-        desired_roll = self.command.stand_roll
-        desired_pitch = self.command.stand_pitch
+        if abs(diff_yaw) > self.max_degree_change:
+            self.state.stand_yaw += np.sign(diff_yaw) * self.max_degree_change
+        else:
+            self.state.stand_yaw = self.command.stand_yaw
 
-        #roll_imu, pitch_imu, gx, gy = self.hardware_interface.get_imu_tilt()
+        diff_roll = self.command.stand_roll - self.state.stand_roll
 
-        self.state.stand_pitch = desired_pitch #- pitch_imu
-        self.state.stand_roll = desired_roll #- roll_imu
+        if abs(diff_roll) > self.max_degree_change:
+            self.state.stand_roll += np.sign(diff_roll) * self.max_degree_change
+        else:
+            self.state.stand_roll = self.command.stand_roll
 
-        #print(self.state.stand_pitch, self.state.stand_roll)
+        diff_pitch = self.command.stand_pitch - self.state.stand_pitch
+
+        if abs(diff_pitch) > self.max_degree_change:
+            self.state.stand_pitch += np.sign(diff_pitch) * self.max_degree_change
+        else:
+            self.state.stand_pitch = self.command.stand_pitch
 
         for leg_index in range(4):
             pos = orientation_kinematics([-self.state.stand_x, self.state.stand_y + self.config.abduction_offsets[leg_index], - self.state.stand_z - self.config.body_height], self.state.stand_yaw, self.state.stand_pitch, self.state.stand_roll, leg_index, self.config)
