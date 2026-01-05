@@ -73,12 +73,12 @@ class RobotConfig:
         self.leg_pairs = np.array([[0, 3], [1, 2]])
 
         # -------------- Max parameters ----------------
-        self.max_acceleration = 0.07 #m/s^2
+        self.max_acceleration = 0.15 #m/s^2
         self.max_yaw_acceleration = 40 # deg/s^2
         self.max_yaw_rate =  50 #deg/s
         self.max_yaw_stand = 20 #deg
-        self.max_pitch = 20 #deg
-        self.max_roll = 20 #deg
+        self.max_pitch = 15 #deg
+        self.max_roll = 18 #deg
         self.max_x = 0.07 #meters
         self.max_y = 0.06 #meters
         self.max_z = 0.04 #meters
