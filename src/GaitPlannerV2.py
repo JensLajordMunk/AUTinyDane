@@ -1,13 +1,41 @@
 from src.HardwareInterface import HardwareInterface
-from src.Kinematics import inverse_kinematics
 from src.Rotation import orientation_kinematics
 from src.StancePlannerV2 import StancePlanner
 from src.SwingPlannerV2 import SwingPlanner
 from src.InertiaBalancer import InertiaBalancer
-from src.FallExit import emergency_stop
+from src.Kinematics import inverse_kinematics
 import numpy as np
 import time
+import ctypes
+import os
 
+class ServoAngles(ctypes.Structure):
+    _fields_ = [
+        ("theta_ab", ctypes.c_double),
+        ("theta_thigh", ctypes.c_double),
+        ("theta_shin", ctypes.c_double)
+    ]
+
+lib_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'leg_ik.so')
+ik_lib = ctypes.CDLL(lib_path)
+
+ik_lib.LegIK_new.restype = ctypes.c_void_p
+ik_lib.LegIK_ik.argtypes = [ctypes.c_void_p, ctypes.c_double, ctypes.c_double, ctypes.c_double]
+ik_lib.LegIK_ik.restype = ServoAngles
+ik_lib.LegIK_delete.argtypes = [ctypes.c_void_p]
+
+class CppLegIK:
+    def __init__(self):
+        self.obj = ik_lib.LegIK_new()
+        
+    def get_ik(self, x, y, z, leg_index):
+        res = ik_lib.LegIK_ik(self.obj, float(x), float(y), float(z), int(leg_index))
+        return res.theta_ab, res.theta_thigh, res.theta_shin
+        
+    def __del__(self):
+        ik_lib.LegIK_delete(self.obj)
+
+fast_ik = CppLegIK()
 
 # TODO: Implement terrain adaptation
 
@@ -49,7 +77,7 @@ class GaitPlanner:
     def trot_begin(self):
         self.state.leg_pair_in_swing = [False, False]
         now = time.time()
-        self.state.legpair_start_time = [now, now - 2.0/3.0 * self.config.stancetime]
+        self.state.legpair_start_time = [now, now - 3.0/3.0 * self.config.stancetime]
         self.state.velocityX = 0.0
         self.state.velocityY = 0.0
         self.state.trot_yaw = 0.0
@@ -79,11 +107,12 @@ class GaitPlanner:
         limit = abs(self.state.trot_yaw * self.config.stancetime)
         self.state.stance_yaw_pair[pair_index] = np.clip(self.state.stance_yaw_pair[pair_index], -limit, limit)
 
-        pos_vec = np.array([x, y, z])
+        pos_vec = np.array([x, y, z - self.config.body_height])
         for leg_index in self.config.leg_pairs[pair_index, :]:
             pos_with_offset = pos_vec + np.array([0, self.config.abduction_offsets[leg_index], 0])
             final_pos = orientation_kinematics(pos_with_offset, self.state.stance_yaw_pair[pair_index],0, 0, leg_index, self.config)
-            angles = inverse_kinematics(final_pos, leg_index, self.config)
+            angles = inverse_kinematics(final_pos,leg_index, self.config)
+            angles = fast_ik.get_ik(final_pos[0],final_pos[1],final_pos[2], leg_index)
             for motor_index in range(3):
                 self.hardware_interface.set_actuator_position(angles[motor_index], leg_index, motor_index)
                 self.state.foot_locations[motor_index, leg_index] = final_pos[motor_index]

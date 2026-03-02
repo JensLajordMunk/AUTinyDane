@@ -51,7 +51,7 @@ class RobotConfig:
         self.leg_low = 0.09225 # Should be measured based on neutral position
         self.body_width = 0.09012
         self.body_length = 0.16993
-        self.body_height = 0.13
+        self.body_height = 0.12581665/2
         self.l1 = 0.024
         self.l2 = 0.03
         self.l3 = 0.0277
@@ -63,17 +63,17 @@ class RobotConfig:
         self.servo_offset_z = 0.020
 
         # -------------- Gait parameters ----------------
-        self.swing_method = "CHEETAH"
-        self.stance_method = "BEZIER"
+        self.swing_method = "TRIANGULAR"
+        self.stance_method = "LINEAR"
         self.arcR = 0.012
-        self.stancetime = 0.5
-        self.swingtime = self.stancetime / 3  # semi trot gait pattern
-        self.step_height = 0.04
+        self.stancetime = 2
+        self.swingtime = self.stancetime  # trot gait pattern
+        self.step_height = 0.08
         self.frequency = 30
         self.leg_pairs = np.array([[0, 3], [1, 2]])
 
         # -------------- Max parameters ----------------
-        self.max_acceleration = 0.15 #m/s^2
+        self.max_acceleration = 0.2 #m/s^2
         self.max_yaw_acceleration = 40 # deg/s^2
         self.max_yaw_rate =  50 #deg/s
         self.max_yaw_stand = 20 #deg
@@ -82,5 +82,5 @@ class RobotConfig:
         self.max_x = 0.07 #meters
         self.max_y = 0.06 #meters
         self.max_z = 0.04 #meters
-        self.max_velocityX = min(0.3, (self.max_x-self.arcR)*2/self.stancetime) #m/s
+        self.max_velocityX = min(0.4, (self.max_x-self.arcR)*2/self.stancetime) #m/s
         self.max_velocityY = min(0.1, (self.max_y-self.arcR)*2/self.stancetime) #m/s

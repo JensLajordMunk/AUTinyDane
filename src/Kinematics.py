@@ -26,11 +26,6 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     o_sx = configuration.servo_offset_x
     o_sz = configuration.servo_offset_z
 
-    # Clip x,y,z values:
-    x = np.clip(x,-configuration.max_x,configuration.max_x)
-    y = np.clip(y,configuration.abduction_offsets[leg_index]-configuration.max_y,configuration.abduction_offsets[leg_index]+configuration.max_y)
-    z = np.clip(z,-configuration.body_height-configuration.max_z,-configuration.body_height+configuration.max_z)
-
     # Determine abductor angle:
     # Angle between direction of d_yz_af from Abductor to Foot in yz-plane and positive y-axis:
     alpha = np.arctan2(z,y)
@@ -82,24 +77,30 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     a1 = l5*np.cos(theta5) + l_up*np.sin(theta_hip)
     b1 = -l5*np.sin(theta5) + l_up*np.cos(theta_hip)
     R1 = (a1**2+b1**2)**0.5
+    
 
     phi1 = np.arctan2(a1,b1)
     arccos_argument = (l3 ** 2 + R1 ** 2 - l4 ** 2) / (2 * l3 * R1)
     arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     delta1  = np.arccos(arccos_argument)
     theta3r = phi1 + delta1 - np.pi/2
+    
 
     theta3l = np.pi - theta_pizza - theta3r
+    
 
     a2 = l3*np.cos(theta3l) - o_sx
     b2 = l3*np.sin(theta3l) + o_sz
     R2 = (a2**2+b2**2)**0.5
+    
 
     phi2 = np.arctan2(b2,a2)
     arccos_argument = (l1 ** 2 + R2 ** 2 - l2 ** 2) / (2 * l1 * R2)
     arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     delta2 = np.arccos(arccos_argument)
+    print(phi2)
 
     theta1 = phi2 - delta2
+    
 
     return np.array([theta_abductor, theta_hip, theta1])
