@@ -111,7 +111,6 @@ class GaitPlanner:
         for leg_index in self.config.leg_pairs[pair_index, :]:
             pos_with_offset = pos_vec + np.array([0, self.config.abduction_offsets[leg_index], 0])
             final_pos = orientation_kinematics(pos_with_offset, self.state.stance_yaw_pair[pair_index],0, 0, leg_index, self.config)
-            angles = inverse_kinematics(final_pos,leg_index, self.config)
             angles = fast_ik.get_ik(final_pos[0],final_pos[1],final_pos[2], leg_index)
             for motor_index in range(3):
                 self.hardware_interface.set_actuator_position(angles[motor_index], leg_index, motor_index)

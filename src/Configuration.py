@@ -65,7 +65,7 @@ class RobotConfig:
         # -------------- Gait parameters ----------------
         self.swing_method = "TRIANGULAR"
         self.stance_method = "LINEAR"
-        self.arcR = 0.012
+        self.arcR = 0.019
         self.stancetime = 2
         self.swingtime = self.stancetime  # trot gait pattern
         self.step_height = 0.08

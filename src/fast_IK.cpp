@@ -94,32 +94,24 @@ public:
         const double knee = std::numbers::pi-(angles.theta_thigh + phi);
 
         // Calculate split1 form definition
-        //const double L_split1 = calculateSplit(L_link, L_thigh, (2*std::numbers::pi - phi - c));
         const double link_angle = c - knee - std::numbers::pi*0.5; // absolute angle of link endpoint
         const double x1 = L_link * std::cos(link_angle) + L_thigh * std::sin(angles.theta_thigh);
         const double z1 = -L_link * std::sin(link_angle) + L_thigh * std::cos(angles.theta_thigh);
         const double L_split1 = std::hypot(x1, z1);
         const double theta_trick = -0.5*std::numbers::pi+(cosLaw(L_split1,L_pizza,L_tie) + std::atan2(x1, z1));
 
-        // Calculate mu from definition
-        //const double mu = std::numbers::pi - cosLaw(L_split1, L_thigh, L_link) - cosLaw(L_split1, L_pizza, L_tie) - angles.theta_thigh;
-
         // Calculate omega from definition
-        const double omega = std::numbers::pi - tau - theta_trick; //std::numbers::pi - tau - (std::numbers::pi*0.5-mu);
+        const double omega = std::numbers::pi - tau - theta_trick;
 
         // Calculate L split 2 from definition
         const double x2 = L_pizza * std::cos(omega) - servo_offset_x;
         const double z2 = L_pizza * std::sin(omega) + servo_offset_z;
         const double L_split2 = std::hypot(z2, x2);
 
-        // Calculate gamma, zeta, and delta from definitions
         const double lambda = cosLaw(L_servo, L_split2, L_slink);
         const double zeta = std::atan2(z2, x2);
+        angles.theta_shin = zeta-lambda;
         std::cout << zeta << "\n";
-        //const double delta = (std::numbers::pi / 2) - nu;
-
-        // Calculate shin angle
-        angles.theta_shin = lambda + zeta;
 
         // Return servo angles
         return angles;

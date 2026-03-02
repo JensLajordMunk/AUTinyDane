@@ -98,9 +98,9 @@ def inverse_kinematics(r_abductor_foot,leg_index,configuration):
     arccos_argument = (l1 ** 2 + R2 ** 2 - l2 ** 2) / (2 * l1 * R2)
     arccos_argument = np.clip(arccos_argument, -0.99, 0.99)
     delta2 = np.arccos(arccos_argument)
-    print(phi2)
 
     theta1 = phi2 - delta2
+    print(delta2)
     
 
     return np.array([theta_abductor, theta_hip, theta1])
