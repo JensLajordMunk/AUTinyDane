@@ -62,7 +62,7 @@ Power on the Raspberry Pi system, connect the PS4 controller via Bluetooth, and 
   python run_robot.py
 ```
 # Link to CAD Model:
-[Link to CAD]((https://cad.onshape.com/documents/25850dd3366963afee831169/w/6267d7eaa6947084507654d8/e/b0a10a8a95fe9548e4d9bb0d))
+[LView CAD Model in Onshape](https://cad.onshape.com/documents/25850dd3366963afee831169/w/6267d7eaa6947084507654d8/e/b0a10a8a95fe9548e4d9bb0d)
 
 #License
 This project is licensed under the terms of the MIT License. See the ```LICENSE``` file for details.
