@@ -1,7 +1,10 @@
 # AUTinyDane: Small Robotic Dog Development Project
 An open-source, affordable, and customizable 4-legged robotic dog. Originally developed as a 5th-semester project at the Department of Mechanical and Production Engineering at Aarhus University, this project covers the full development process from conceptual design to a finalized, functional quadruped.
 Click the image below to see the robot walking:
+
+
 [![Watch the Dog in Action](https://img.youtube.com/vi/1Trw5Afw9uk/maxresdefault.jpg)](https://youtu.be/1Trw5Afw9uk)
+
 
 ## System Overview
 
