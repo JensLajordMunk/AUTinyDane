@@ -30,7 +30,7 @@ The pure Python software stack manages everything from user inputs to gait gener
 ```text
 AUTinyDane/
 ├── src/                    # Core robot operational code
-│   ├── Kinematics.py       # Inverse/Forward kinematics calculations
+│   ├── Kinematics.py       # Inverse kinematics calculations
 │   ├── HardwareInterface.py# Serial/I2C communication to Servos
 │   ├── Configuration.py    # Physical dimensions and robot parameters
 │   └── PS4Controller/      # DualShock 4 input mapping
@@ -43,7 +43,7 @@ AUTinyDane/
 │   ├── calibrate_servos.py # Servo offset and range tuning
 │   └── ServoNeutral.py     # Script to hold servos at neutral position
 ├── tests/                  # Module testing
-│   └── Test_kinematics.py  # Validation for IK/FK models
+│   └── Test_kinematics.py  # Validation for IK models
 ├── run_robot.py            # Main execution script
 └── requirements.txt        # Python package dependencies
 ```
@@ -55,15 +55,16 @@ AUTinyDane/
    cd autinydane
 
 2. Install the required Python dependencies (it is recommended to use a virtual environment):
-  ```bash
-  pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+
 ## Run The robot
 Remember to calibrate for the current assembly of the robot in src/ServoCalibratio.py, then:
 Power on the Raspberry Pi system, connect the PS4 controller via Bluetooth, and execute the main loop:
- ```bash
-  python run_robot.py
+   ```bash
+   python run_robot.py
 ```
+
 ## Link to CAD Model:
 [View CAD Model in Onshape](https://cad.onshape.com/documents/25850dd3366963afee831169/w/6267d7eaa6947084507654d8/e/b0a10a8a95fe9548e4d9bb0d)
 
