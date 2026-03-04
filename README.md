@@ -59,7 +59,7 @@ AUTinyDane/
    pip install -r requirements.txt
 
 ## Run The robot
-Remember to calibrate for the current assembly of the robot in [ServoCalibratio.py](src/ServoCalibratio.py), then:
+Remember to calibrate for the current assembly of the robot in [ServoCalibration.py](src/ServoCalibration.py), then:
 Power on the Raspberry Pi system, connect the PS4 controller via Bluetooth, and execute the main loop:
    ```bash
    python run_robot.py
