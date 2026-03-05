@@ -53,11 +53,11 @@ AUTinyDane/
    ```bash
    git clone [https://github.com/jenslajordmunk/autinydane.git](https://github.com/jenslajordmunk/autinydane.git)
    cd autinydane
-
+   ```
 2. Install the required Python dependencies (it is recommended to use a virtual environment):
    ```bash
    pip install -r requirements.txt
-
+   ```
 ## Run The robot
 Remember to calibrate for the current assembly of the robot in [ServoCalibration.py](src/ServoCalibration.py), then:
 Power on the Raspberry Pi system, connect the PS4 controller via Bluetooth, and execute the main loop:
