@@ -28,6 +28,7 @@ class Command:
 
     @property
     def trot_yaw(self):
+        return self.config.max_yaw_rate * self.R3[0]
         return -self.config.max_yaw_rate * self.R3[0]
 
     @property
@@ -52,8 +53,8 @@ class Command:
 
     @property
     def velocityX(self):
-        return self.config.max_velocityX * self.L3[1] # Leaves room for acceleration when falling
+        return 0.75 * self.config.max_velocityX * self.L3[1] # Leaves room for acceleration when falling
 
     @property
     def velocityY(self):
-        return -self.config.max_velocityY * self.L3[0] # Negative to match left/right
+        return -0.75 * self.config.max_velocityY * self.L3[0] # Negative to match left/right
