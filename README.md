@@ -1,72 +1,197 @@
-# AUTinyDane: Small Robotic Dog Development Project
-An open-source, affordable, and customizable 4-legged robotic dog. Originally developed as a 5th-semester project at the Department of Mechanical and Production Engineering at Aarhus University, this project covers the full development process from conceptual design to a finalized, functional quadruped.
-Click the image below to see the robot walking:
+# AUTinyDane
 
+AUTinyDane is an open-source, affordable quadruped robot platform developed at Aarhus University.  
+The project focuses on a complete real robot stack: mechanical design, servo actuation, inverse kinematics, gait generation, and PS4 teleoperation on a Raspberry Pi.
 
-[![Watch the Dog in Action](https://img.youtube.com/vi/1Trw5Afw9uk/maxresdefault.jpg)](https://youtu.be/1Trw5Afw9uk)
+[![Watch AUTinyDane walking](https://img.youtube.com/vi/1Trw5Afw9uk/maxresdefault.jpg)](https://youtu.be/1Trw5Afw9uk)
 
+## What this repository contains
 
-## System Overview
+- Full Python control stack for a 12-DOF quadruped
+- Real-time gait/state logic for trot and standing control modes
+- Servo + IMU hardware interface for Raspberry Pi
+- PS4 controller integration for teleoperation
+- Calibration and utility scripts for bring-up and maintenance
 
-AUTinyDane is designed to be highly accessible, operating on a unified, single-board architecture that handles all high-level planning and low-level execution in an open-loop configuration.
+## System overview
 
-![System Diagram](Software%20Overview.png)
+![Software and system overview](Software%20Overview.png)
 
-### Hardware Architecture
-The robot operates entirely on a single-controller setup:
-* **Main Controller:** Raspberry Pi running the full Python-based control stack.
-* **Actuators:** Csl6336hv servos utilizing a unique custom bevel gear transmission. 
-* **Chassis:** Hybrid construction utilizing laser-cut plywood and 3D-printed PLA/PETG components, validated through Finite Element Analysis (FEA) for structural integrity.
+### Hardware architecture
 
-### Software Architecture
-The pure Python software stack manages everything from user inputs to gait generation and hardware interfacing:
-* **Kinematics:** Inverse Kinematics engine calculated entirely in Python (`Kinematics.py`). Optimal leg dimensions were mapped using an analytical solution.
-* **Gait & Trajectory Planning:** Modular planners for different movement phases operating in an open-loop state machine (`GaitPlannerV2.py`, `StancePlannerV2.py`, `SwingPlannerV2.py`).
-* **Hardware Interfacing:** Direct communication protocols for servo control (`HardwareInterface.py`).
-* **Teleoperation:** Native PlayStation 4 controller support for real-time directional input and gait switching.
+- **Controller:** Raspberry Pi (single-board control)
+- **Actuation:** 12 hobby servos driven by PCA9685 boards
+- **IMU:** MPU6050
+- **Chassis:** Laser-cut + 3D-printed hybrid structure
 
-## Project Structure (Important Files)
+### Software architecture
+
+Core runtime flow:
+
+1. Read controller command inputs
+2. Update movement/stance command state
+3. Generate leg trajectories (swing/stance planners)
+4. Solve inverse kinematics
+5. Send commands to servo drivers
+
+Main components:
+
+- `src/GaitPlannerV2.py` – trot cycle logic
+- `src/StancePlannerV2.py`, `src/SwingPlannerV2.py` – stance/swing trajectories
+- `src/Kinematics.py` – inverse kinematics
+- `src/HardwareInterface.py` – servo/IMU communication
+- `src/PS4Controller/` – DualShock 4 mapping
+
+---
+
+## Repository structure
 
 ```text
 AUTinyDane/
-├── src/                    # Core robot operational code
-│   ├── Kinematics.py       # Inverse kinematics calculations
-│   ├── HardwareInterface.py# Serial/I2C communication to Servos
-│   ├── Configuration.py    # Physical dimensions and robot parameters
-│   └── PS4Controller/      # DualShock 4 input mapping
-├── legacy/                 # Original planning modules
-│   ├── GaitPlanner.py      # Locomotion state machine and timing
-│   ├── StancePlanner.py    # Stance phase calculations
-│   ├── SwingPlanner.py     # Foot swing trajectory generation
-│   └── gait_simulator.py   # Visualizer for gaits before physical deployment
-├── tools/                  # Utility and calibration scripts
-│   ├── calibrate_servos.py # Servo offset and range tuning
-│   └── ServoNeutral.py     # Script to hold servos at neutral position
-├── tests/                  # Module testing
-│   └── Test_kinematics.py  # Validation for IK models
-├── run_robot.py            # Main execution script
-└── requirements.txt        # Python package dependencies
+├── run_robot.py                 # Main runtime entry point
+├── requirements.txt             # Python dependencies
+├── src/                         # Core runtime modules
+│   ├── Configuration.py         # Robot geometry and limits
+│   ├── Command.py               # Command state and mode abstraction
+│   ├── State.py                 # Runtime gait/state values
+│   ├── Kinematics.py            # IK solver
+│   ├── HardwareInterface.py     # PCA9685 + IMU interface
+│   ├── ServoCalibration.py      # Servo neutral offsets and gains
+│   ├── GaitPlannerV2.py         # Main gait planner
+│   ├── StancePlannerV2.py       # Stance phase planning
+│   ├── SwingPlannerV2.py        # Swing phase planning
+│   └── PS4Controller/           # Controller input mapping/listener
+├── tools/                       # Calibration and utility scripts
+│   ├── calibrate_servos.py      # Interactive servo offset calibration
+│   ├── ServoNeutral.py          # Move servos/legs to neutral
+│   ├── TestServo.py             # Interactive servo testing helpers
+│   └── IMU_calibration.py       # IMU calibration utility
+├── tests/                       # Manual/experimental test scripts
+└── legacy/                      # Older planners/simulators
 ```
+
+---
+
+## Prerequisites
+
+### Hardware/runtime environment
+
+- Raspberry Pi with Python 3
+- I2C enabled on the Pi
+- PCA9685 board(s) connected on expected addresses (`0x40`–`0x43` in current code)
+- MPU6050 IMU connected (`0x68`)
+- PS4 controller (for teleoperation)
+
+### Software
+
+- Python 3.10+ recommended
+- `pip`
+
+> Note: Several dependencies are Raspberry Pi / hardware specific and may not install or run on non-Pi machines.
+
+---
+
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/jenslajordmunk/autinydane.git](https://github.com/jenslajordmunk/autinydane.git)
-   cd autinydane
-   ```
-2. Install the required Python dependencies (it is recommended to use a virtual environment):
-   ```bash
-   pip install -r requirements.txt
-   ```
-## Run The robot
-Remember to calibrate for the current assembly of the robot in [ServoCalibration.py](src/ServoCalibration.py), then:
-Power on the Raspberry Pi system, connect the PS4 controller via Bluetooth, and execute the main loop:
-   ```bash
-   python run_robot.py
+```bash
+git clone https://github.com/JensLajordMunk/AUTinyDane.git
+cd AUTinyDane
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-## Link to CAD Model:
+If running on Raspberry Pi, also ensure system packages and I2C support are configured.
+
+---
+
+## Quick start (robot runtime)
+
+1. Verify wiring and power-off safety state
+2. Confirm/update servo calibration in `src/ServoCalibration.py`
+3. Pair and connect the PS4 controller (`/dev/input/js0` expected)
+4. Run:
+
+```bash
+python run_robot.py
+```
+
+---
+
+## Controller mapping
+
+From `src/PS4Controller/DogController.py`:
+
+- **X** → `TROT`
+- **Circle** → `ROTATE`
+- **Square** → `TRANSLATE`
+- **Triangle** → `NEUTRAL`
+- **Left stick (L3)** → translational commands (forward/lateral + stand height)
+- **Right stick (R3)** → yaw/roll/pitch depending on mode
+
+Current modes are defined in `src/Command.py`:
+
+- `NEUTRAL`
+- `TROT`
+- `ROTATE`
+- `TRANSLATE`
+
+---
+
+## Calibration and utility scripts
+
+- **Servo neutral/pose checks:**
+  ```bash
+  python tools/ServoNeutral.py
+  ```
+
+- **Interactive servo calibration (writes `src/ServoCalibration.py`):**
+  ```bash
+  python tools/calibrate_servos.py
+  ```
+
+- **Servo test helper:**
+  ```bash
+  python tools/TestServo.py
+  ```
+
+Run these carefully with the robot safely supported/off-ground.
+
+---
+
+## Development and testing
+
+This repository currently contains mostly hardware/manual test scripts under `tests/` rather than a full automated CI-style unit test suite.
+
+Basic discovery check:
+
+```bash
+python -m unittest discover -q
+```
+
+Useful manual scripts include:
+
+- `tests/Test_kinematics.py`
+- `tests/gait_simulatorV2.py`
+- `tests/IMU_test.py`
+
+---
+
+## Troubleshooting
+
+- **Controller not detected:** ensure DS4 is connected and appears as `/dev/input/js0`.
+- **No servo movement:** verify I2C wiring and PCA9685 addresses.
+- **Unstable pose/motion:** re-run servo calibration and verify geometry values in `src/Configuration.py`.
+- **Import/runtime issues on desktop OS:** many dependencies target Raspberry Pi hardware.
+
+---
+
+## CAD model
+
 [View CAD Model in Onshape](https://cad.onshape.com/documents/25850dd3366963afee831169/w/6267d7eaa6947084507654d8/e/b0a10a8a95fe9548e4d9bb0d)
 
+---
+
 ## License
-This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for details.
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
